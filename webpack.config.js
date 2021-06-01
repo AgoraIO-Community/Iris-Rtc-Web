@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    AgoraRtcEngine: './src/iris.ts',
+    AgoraRtcWrapper: './src/iris.ts',
   },
   module: {
     rules: [
@@ -18,7 +18,9 @@ module.exports = {
   },
   output: {
     filename: '[name].bundle.js',
+    library: 'IrisRtcEngine',
     libraryTarget: 'umd',
+    libraryExport: 'default',
     path: path.resolve(__dirname, 'dist'),
   },
 };
