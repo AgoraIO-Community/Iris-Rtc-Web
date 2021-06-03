@@ -2751,7 +2751,7 @@ export interface AudioVolumeInfo {
 export interface ClientRoleOptions {
   /** The latency level of an audience member in interactive live streaming. See #AUDIENCE_LATENCY_LEVEL_TYPE.
    */
-  audienceLatencyLevel: AUDIENCE_LATENCY_LEVEL_TYPE;
+  audienceLatencyLevel?: AUDIENCE_LATENCY_LEVEL_TYPE;
 }
 
 /** Statistics of the channel.
@@ -3219,9 +3219,9 @@ export interface RemoteAudioStats {
  */
 export interface VideoDimensions {
   /** Width (pixels) of the video. */
-  width: number;
+  width?: number;
   /** Height (pixels) of the video. */
-  height: number;
+  height?: number;
 }
 
 /** (Recommended) The standard bitrate set in the \ref IRtcEngine::setVideoEncoderConfiguration "setVideoEncoderConfiguration" method.
@@ -3249,15 +3249,15 @@ export const DEFAULT_MIN_BITRATE = -1;
 export interface VideoEncoderConfiguration {
   /** The video frame dimensions (px) used to specify the video quality and measured by the total number of pixels along a frame's width and height: VideoDimensions. The default value is 640 x 360.
    */
-  dimensions: VideoDimensions;
+  dimensions?: VideoDimensions;
   /** The frame rate of the video: #FRAME_RATE. The default value is 15.
 
    Note that we do not recommend setting this to a value greater than 30.
    */
-  frameRate: FRAME_RATE;
+  frameRate?: FRAME_RATE;
   /** The minimum frame rate of the video. The default value is -1.
    */
-  minFrameRate: number;
+  minFrameRate?: number;
   /** The video encoding bitrate (Kbps).
 
    Choose one of the following options:
@@ -3310,25 +3310,25 @@ export interface VideoEncoderConfiguration {
    | 3840 * 2160            | 60               | 6500                                   | 6500                                   |
 
    */
-  bitrate: number;
+  bitrate?: number;
   /** The minimum encoding bitrate (Kbps).
 
    The SDK automatically adjusts the encoding bitrate to adapt to the network conditions. Using a value greater than the default value forces the video encoder to output high-quality images but may cause more packet loss and hence sacrifice the smoothness of the video transmission. That said, unless you have special requirements for image quality, Agora does not recommend changing this value.
 
    @note This parameter applies only to the `LIVE_BROADCASTING` profile.
    */
-  minBitrate: number;
+  minBitrate?: number;
   /** The video orientation mode of the video: #ORIENTATION_MODE.
    */
-  orientationMode: ORIENTATION_MODE;
+  orientationMode?: ORIENTATION_MODE;
   /** The video encoding degradation preference under limited bandwidth: #DEGRADATION_PREFERENCE.
    */
-  degradationPreference: DEGRADATION_PREFERENCE;
+  degradationPreference?: DEGRADATION_PREFERENCE;
   /** Sets the mirror mode of the published local video stream. It only affects the video that the remote user sees. See #VIDEO_MIRROR_MODE_TYPE
 
    @note The SDK disables the mirror mode by default.
    */
-  mirrorMode: VIDEO_MIRROR_MODE_TYPE;
+  mirrorMode?: VIDEO_MIRROR_MODE_TYPE;
 }
 
 /** The video and audio properties of the user displaying the video in the CDN live. Agora supports a maximum of 17 transcoding users in a CDN streaming channel.
@@ -3340,16 +3340,16 @@ export interface TranscodingUser {
 
   /** Horizontal position (pixel) of the video frame relative to the top left corner.
    */
-  x: number;
+  x?: number;
   /** Vertical position (pixel) of the video frame relative to the top left corner.
    */
-  y: number;
+  y?: number;
   /** Width (pixel) of the video frame. The default value is 360.
    */
-  width: number;
+  width?: number;
   /** Height (pixel) of the video frame. The default value is 640.
    */
-  height: number;
+  height?: number;
 
   /** The layer index of the video frame. An integer. The value range is [0, 100].
 
@@ -3360,13 +3360,13 @@ export interface TranscodingUser {
    - If zOrder is beyond this range, the SDK reports #ERR_INVALID_ARGUMENT.
    - As of v2.3, the SDK supports zOrder = 0.
    */
-  zOrder: number;
+  zOrder?: number;
   /** The transparency level of the user's video. The value ranges between 0 and 1.0:
 
    - 0: Completely transparent
    - 1.0: (Default) Opaque
    */
-  alpha: number;
+  alpha?: number;
   /** The audio channel where the host's audio is located. The value range is [0,5].
 
    - 0: (Default) Supports dual channels at most, depending on the upstream of the host.
@@ -3379,7 +3379,7 @@ export interface TranscodingUser {
 
    @note If the value is not `0`, a special player is required.
    */
-  audioChannel: number;
+  audioChannel?: number;
 }
 
 /** Image properties.
@@ -3390,13 +3390,13 @@ export interface RtcImage {
   /** HTTP/HTTPS URL address of the image on the live video. The maximum length of this parameter is 1024 bytes. */
   url: string;
   /** Horizontal position of the image from the upper left of the live video. */
-  x: number;
+  x?: number;
   /** Vertical position of the image from the upper left of the live video. */
-  y: number;
+  y?: number;
   /** Width of the image on the live video. */
-  width: number;
+  width?: number;
   /** Height of the image on the live video. */
-  height: number;
+  height?: number;
 }
 
 /** The configuration for advanced features of the RTMP or RTMPS streaming with transcoding.
@@ -3410,7 +3410,7 @@ export interface LiveStreamAdvancedFeature {
    * - true: Enable the advanced feature.
    * - false: (Default) Disable the advanced feature.
    */
-  opened: boolean;
+  opened?: boolean;
 }
 
 /** The advanced feature for high-quality video with a lower bitrate. */
@@ -3425,48 +3425,48 @@ export interface LiveTranscoding {
    * - When pushing video streams to the CDN, ensure that `width` is at least 64; otherwise, the Agora server adjusts the value to 64.
    * - When pushing audio streams to the CDN, set `width` and `height` as 0.
    */
-  width: number;
+  width?: number;
   /** The height of the video in pixels. The default value is 640.
    * - When pushing video streams to the CDN, ensure that `height` is at least 64; otherwise, the Agora server adjusts the value to 64.
    * - When pushing audio streams to the CDN, set `width` and `height` as 0.
    */
-  height: number;
+  height?: number;
   /** Bitrate of the CDN live output video stream. The default value is 400 Kbps.
 
    Set this parameter according to the Video Bitrate Table. If you set a bitrate beyond the proper range, the SDK automatically adapts it to a value within the range.
    */
-  videoBitrate: number;
+  videoBitrate?: number;
   /** Frame rate of the output video stream set for the CDN live streaming. The default value is 15 fps, and the value range is (0,30].
 
    @note The Agora server adjusts any value over 30 to 30.
    */
-  videoFramerate: number;
+  videoFramerate?: number;
 
   /** **DEPRECATED** Latency mode:
 
    - true: Low latency with unassured quality.
    - false: (Default) High latency with assured quality.
    */
-  lowLatency: boolean;
+  lowLatency?: boolean;
 
   /** Video GOP in frames. The default value is 30 fps.
    */
-  videoGop: number;
+  videoGop?: number;
   /** Self-defined video codec profile: #VIDEO_CODEC_PROFILE_TYPE.
 
    @note If you set this parameter to other values, Agora adjusts it to the default value of 100.
    */
-  videoCodecProfile: VIDEO_CODEC_PROFILE_TYPE;
+  videoCodecProfile?: VIDEO_CODEC_PROFILE_TYPE;
   /** The background color in RGB hex value. Value only. Do not include a preceeding #. For example, 0xFFB6C1 (light pink). The default value is 0x000000 (black).
    */
-  backgroundColor: number;
+  backgroundColor?: number;
 
   /** video codec type */
-  videoCodecType: VIDEO_CODEC_TYPE_FOR_STREAM;
+  videoCodecType?: VIDEO_CODEC_TYPE_FOR_STREAM;
 
   /** The number of users in the interactive live streaming.
    */
-  userCount: number;
+  userCount?: number;
   /** TranscodingUser
    */
   transcodingUsers: TranscodingUser[];
@@ -3483,18 +3483,18 @@ export interface LiveTranscoding {
 
    Ensure that the format of the image is PNG. Once a watermark image is added, the audience of the CDN live publishing stream can see the watermark image. See RtcImage.
    */
-  watermark: RtcImage;
+  watermark?: RtcImage;
   /** The background image added to the CDN live publishing stream.
 
    Once a background image is added, the audience of the CDN live publishing stream can see the background image. See RtcImage.
    */
-  backgroundImage: RtcImage;
+  backgroundImage?: RtcImage;
   /** Self-defined audio-sample rate: #AUDIO_SAMPLE_RATE_TYPE.
    */
-  audioSampleRate: AUDIO_SAMPLE_RATE_TYPE;
+  audioSampleRate?: AUDIO_SAMPLE_RATE_TYPE;
   /** Bitrate of the CDN live audio output stream. The default value is 48 Kbps, and the highest value is 128.
    */
-  audioBitrate: number;
+  audioBitrate?: number;
   /** The numbder of audio channels for the CDN live stream. Agora recommends choosing 1 (mono), or 2 (stereo) audio channels. Special players are required if you choose option 3, 4, or 5:
 
    - 1: (Default) Mono.
@@ -3503,43 +3503,43 @@ export interface LiveTranscoding {
    - 4: Four audio channels.
    - 5: Five audio channels.
    */
-  audioChannels: 1 | 2 | 3 | 4 | 5;
+  audioChannels?: 1 | 2 | 3 | 4 | 5;
   /** Self-defined audio codec profile: #AUDIO_CODEC_PROFILE_TYPE.
    */
 
-  audioCodecProfile: AUDIO_CODEC_PROFILE_TYPE;
+  audioCodecProfile?: AUDIO_CODEC_PROFILE_TYPE;
 
   /** Advanced features of the RTMP or RTMPS streaming with transcoding. See LiveStreamAdvancedFeature.
    *
    * @since v3.1.0
    */
-  advancedFeatures: LiveStreamAdvancedFeature[];
+  advancedFeatures?: LiveStreamAdvancedFeature[];
 
   /** The number of enabled advanced features. The default value is 0. */
-  advancedFeatureCount: number;
+  advancedFeatureCount?: number;
 }
 
 /** Camera capturer configuration.
  */
 export interface CameraCapturerConfiguration {
   /** Camera capturer preference settings. See: #CAPTURER_OUTPUT_PREFERENCE. */
-  preference: CAPTURER_OUTPUT_PREFERENCE;
+  preference?: CAPTURER_OUTPUT_PREFERENCE;
   /** The width (px) of the video image captured by the local camera.
    * To customize the width of the video image, set `preference` as #CAPTURER_OUTPUT_PREFERENCE_MANUAL (3) first,
    * and then use `captureWidth`.
    *
    * @since v3.3.0
    */
-  captureWidth: number;
+  captureWidth?: number;
   /** The height (px) of the video image captured by the local camera.
    * To customize the height of the video image, set `preference` as #CAPTURER_OUTPUT_PREFERENCE_MANUAL (3) first,
    * and then use `captureHeight`.
    *
    * @since v3.3.0
    */
-  captureHeight: number;
+  captureHeight?: number;
   /** Camera direction settings (for Android/iOS only). See: #CAMERA_DIRECTION. */
-  cameraDirection: CAMERA_DIRECTION;
+  cameraDirection?: CAMERA_DIRECTION;
 }
 
 /** The configurations for the data stream.
@@ -3582,31 +3582,31 @@ export interface DataStreamConfig {
 export interface InjectStreamConfig {
   /** Width of the injected stream in the interactive live streaming. The default value is 0 (same width as the original stream).
    */
-  width: number;
+  width?: number;
   /** Height of the injected stream in the interactive live streaming. The default value is 0 (same height as the original stream).
    */
-  height: number;
+  height?: number;
   /** Video GOP (in frames) of the injected stream in the interactive live streaming. The default value is 30 fps.
    */
-  videoGop: number;
+  videoGop?: number;
   /** Video frame rate of the injected stream in the interactive live streaming. The default value is 15 fps.
    */
-  videoFramerate: number;
+  videoFramerate?: number;
   /** Video bitrate of the injected stream in the interactive live streaming. The default value is 400 Kbps.
 
    @note The setting of the video bitrate is closely linked to the resolution. If the video bitrate you set is beyond a reasonable range, the SDK sets it within a reasonable range.
    */
-  videoBitrate: number;
+  videoBitrate?: number;
   /** Audio-sample rate of the injected stream in the interactive live streaming: #AUDIO_SAMPLE_RATE_TYPE. The default value is 48000 Hz.
 
    @note We recommend setting the default value.
    */
-  audioSampleRate: AUDIO_SAMPLE_RATE_TYPE;
+  audioSampleRate?: AUDIO_SAMPLE_RATE_TYPE;
   /** Audio bitrate of the injected stream in the interactive live streaming. The default value is 48.
 
    @note We recommend setting the default value.
    */
-  audioBitrate: number;
+  audioBitrate?: number;
   /** Audio channels in the interactive live streaming.
 
 
@@ -3615,7 +3615,7 @@ export interface InjectStreamConfig {
 
    @note We recommend setting the default value.
    */
-  audioChannels: number;
+  audioChannels?: number;
 }
 
 /** The definition of ChannelMediaInfo.
@@ -3626,7 +3626,7 @@ export interface ChannelMediaInfo {
   channelName: string;
   /** The token that enables the user to join the channel.
    */
-  token: string;
+  token?: string;
   /** The user ID.
    */
   uid: number;
@@ -3659,7 +3659,7 @@ export interface ChannelMediaRelayConfiguration {
    * corresponds to the number of ChannelMediaInfo structs you define in
    * `destInfos`.
    */
-  destCount: number;
+  destCount?: number;
 }
 
 /**  **DEPRECATED** Lifecycle of the CDN live video stream.
@@ -3692,32 +3692,32 @@ export enum VideoContentHint {
 export interface Rectangle {
   /** The horizontal offset from the top-left corner.
    */
-  x: number;
+  x?: number;
   /** The vertical offset from the top-left corner.
    */
-  y: number;
+  y?: number;
   /** The width of the region.
    */
-  width: number;
+  width?: number;
   /** The height of the region.
    */
-  height: number;
+  height?: number;
 }
 
 /**  **DEPRECATED** Definition of the rectangular region. */
 export interface Rect {
   /** Y-axis of the top line.
    */
-  top: number;
+  top?: number;
   /** X-axis of the left line.
    */
-  left: number;
+  left?: number;
   /** Y-axis of the bottom line.
    */
-  bottom: number;
+  bottom?: number;
   /** X-axis of the right line.
    */
-  right: number;
+  right?: number;
 }
 
 /** The options of the watermark image to be added. */
@@ -3726,17 +3726,17 @@ export interface WatermarkOptions {
    * - true: (Default) The watermark image is visible in preview.
    * - false: The watermark image is not visible in preview.
    */
-  visibleInPreview: boolean;
+  visibleInPreview?: boolean;
   /**
    * The watermark position in the landscape mode. See Rectangle.
    * For detailed information on the landscape mode, see the advanced guide *Video Rotation*.
    */
-  positionInLandscapeMode: Rectangle;
+  positionInLandscapeMode?: Rectangle;
   /**
    * The watermark position in the portrait mode. See Rectangle.
    * For detailed information on the portrait mode, see the advanced guide *Video Rotation*.
    */
-  positionInPortraitMode: Rectangle;
+  positionInPortraitMode?: Rectangle;
 }
 
 /** Screen sharing encoding parameters.
@@ -3751,37 +3751,37 @@ export interface ScreenCaptureParameters {
    - If the value of the screen dimensions is lower than that of the encoding dimensions, for example, 1000 * 1000, the SDK uses 1000 * 1000 for encoding.
    - If the value of the screen dimensions is higher than that of the encoding dimensions, for example, 2000 * 1500, the SDK uses the maximum value under 1920 * 1080 with the aspect ratio of the screen dimension (4:3) for encoding, that is, 1440 * 1080.
    */
-  dimensions: VideoDimensions;
+  dimensions?: VideoDimensions;
   /** The frame rate (fps) of the shared region.
 
    The default value is 5. We do not recommend setting this to a value greater than 15.
    */
-  frameRate: number;
+  frameRate?: number;
   /** The bitrate (Kbps) of the shared region.
 
    The default value is 0 (the SDK works out a bitrate according to the dimensions of the current screen).
    */
-  bitrate: number;
+  bitrate?: number;
   /** Sets whether or not to capture the mouse for screen sharing:
 
    - true: (Default) Capture the mouse.
    - false: Do not capture the mouse.
    */
-  captureMouseCursor: boolean;
+  captureMouseCursor?: boolean;
   /** Whether to bring the window to the front when calling \ref IRtcEngine::startScreenCaptureByWindowId "startScreenCaptureByWindowId" to share the window:
    * - true: Bring the window to the front.
    * - false: (Default) Do not bring the window to the front.
    */
-  windowFocus: boolean;
+  windowFocus?: boolean;
   /** A list of IDs of windows to be blocked.
    *
    * When calling \ref IRtcEngine::startScreenCaptureByScreenRect "startScreenCaptureByScreenRect" to start screen sharing, you can use this parameter to block the specified windows.
    * When calling \ref IRtcEngine::updateScreenCaptureParameters "updateScreenCaptureParameters" to update the configuration for screen sharing, you can use this parameter to dynamically block the specified windows during screen sharing.
    */
-  excludeWindowList: any[];
+  excludeWindowList?: any[];
   /** The number of windows to be blocked.
    */
-  excludeWindowCount: number;
+  excludeWindowCount?: number;
 }
 
 /** Video display settings of the VideoCanvas class.
@@ -3792,7 +3792,7 @@ export interface VideoCanvas {
   view?: any;
   /** The rendering mode of the video view. See #RENDER_MODE_TYPE
    */
-  renderMode: RENDER_MODE_TYPE;
+  renderMode?: RENDER_MODE_TYPE;
   /** The unique channel name for the AgoraRTC session in the string format. The string length must be less than 64 bytes. Supported character scopes are:
    - All lowercase English letters: a to z.
    - All uppercase English letters: A to Z.
@@ -3807,13 +3807,13 @@ export interface VideoCanvas {
   channelId: string;
   /** The user ID. */
   uid: number;
-  priv: any; // private data (underlying video engine denotes it)
+  priv?: any; // private data (underlying video engine denotes it)
   /** The mirror mode of the video view. See VIDEO_MIRROR_MODE_TYPE
    @note
    - For the mirror mode of the local video view: If you use a front camera, the SDK enables the mirror mode by default; if you use a rear camera, the SDK disables the mirror mode by default.
    - For the mirror mode of the remote video view: The SDK disables the mirror mode by default.
    */
-  mirrorMode: VIDEO_MIRROR_MODE_TYPE;
+  mirrorMode?: VIDEO_MIRROR_MODE_TYPE;
 }
 
 /** Image enhancement options.
@@ -3821,18 +3821,18 @@ export interface VideoCanvas {
 export interface BeautyOptions {
   /** The contrast level, used with the @p lightening parameter.
    */
-  lighteningContrastLevel: LIGHTENING_CONTRAST_LEVEL;
+  lighteningContrastLevel?: LIGHTENING_CONTRAST_LEVEL;
 
   /** The brightness level. The value ranges from 0.0 (original) to 1.0. */
-  lighteningLevel: number;
+  lighteningLevel?: number;
 
   /** The sharpness level. The value ranges between 0 (original) and 1. This parameter is usually used to remove blemishes.
    */
-  smoothnessLevel: number;
+  smoothnessLevel?: number;
 
   /** The redness level. The value ranges between 0 (original) and 1. This parameter adjusts the red saturation level.
    */
-  rednessLevel: number;
+  rednessLevel?: number;
 }
 
 /** The contrast level, used with the @p lightening parameter.
@@ -3950,16 +3950,16 @@ export interface LogConfig {
    *
    * Ensure that the directory for the log files exists and is writable. You can use this parameter to rename the log files.
    */
-  filePath: string;
+  filePath?: string;
   /** The size (KB) of a log file. The default value is 1024 KB. If you set `fileSize` to 1024 KB, the SDK outputs at most 5 MB log files;
    * if you set it to less than 1024 KB, the setting is invalid, and the maximum size of a log file is still 1024 KB.
    */
-  fileSize: number;
+  fileSize?: number;
   /** The output log level of the SDK. See #LOG_LEVEL.
    *
    * For example, if you set the log level to WARN, the SDK outputs the logs within levels FATAL, ERROR, and WARN.
    */
-  level: LOG_LEVEL;
+  level?: LOG_LEVEL;
 }
 
 /** Definition of RtcEngineContext.
@@ -3967,7 +3967,7 @@ export interface LogConfig {
 export interface RtcEngineContext {
   /** The IRtcEngineEventHandler object.
    */
-  eventHandler: any | null;
+  eventHandler?: any | null;
   /**
    * The App ID issued to you by Agora. See [How to get the App ID](https://docs.agora.io/en/Agora%20Platform/token#get-an-app-id).
    * Only users in apps with the same App ID can join the same channel and communicate with each other. Use an App ID to create only
@@ -3980,7 +3980,7 @@ export interface RtcEngineContext {
   /** The video window handle. Once set, this parameter enables you to plug
    * or unplug the video devices while they are powered.
    */
-  context: any | null;
+  context?: any | null;
   /**
    * The region for connection. This advanced feature applies to scenarios that have regional restrictions.
    *
@@ -3988,7 +3988,7 @@ export interface RtcEngineContext {
    *
    * @note The SDK supports specify only one region.
    */
-  areaCode: number;
+  areaCode?: number;
   /** The configuration of the log files that the SDK outputs. See LogConfig.
    *
    * @since v3.3.0
@@ -3999,7 +3999,7 @@ export interface RtcEngineContext {
    * deleted log file, and creates a new `agorasdk.log` to record latest logs.
    *
    */
-  logConfig: LogConfig;
+  logConfig?: LogConfig;
 }
 
 /** Metadata type of the observer.
@@ -4020,16 +4020,16 @@ export interface Metadata {
    - For the receiver: the ID of the user who sent the metadata.
    - For the sender: ignore it.
    */
-  uid: number;
+  uid?: number;
   /** Buffer size of the sent or received Metadata.
    */
   size: number;
   /** Buffer address of the sent or received Metadata.
    */
-  buffer: string;
+  buffer?: string;
   /** Timestamp (ms) of the frame following the metadata.
    */
-  timeStampMs: number;
+  timeStampMs?: number;
 }
 
 /** Encryption mode.
@@ -4065,7 +4065,7 @@ export interface EncryptionConfig {
   /**
    * Encryption mode. The default encryption mode is `AES_128_XTS`. See #ENCRYPTION_MODE.
    */
-  encryptionMode: ENCRYPTION_MODE;
+  encryptionMode?: ENCRYPTION_MODE;
   /**
    * Encryption key in string type.
    *
@@ -4084,7 +4084,7 @@ export interface ChannelMediaOptions {
    This member serves a similar function to the `muteAllRemoteAudioStreams` method. After joining the channel,
    you can call the `muteAllRemoteAudioStreams` method to set whether to subscribe to audio streams in the channel.
    */
-  autoSubscribeAudio: boolean;
+  autoSubscribeAudio?: boolean;
   /** Determines whether to subscribe to video streams when the user joins the channel:
    - true: (Default) Subscribe.
    - false: Do not subscribe.
@@ -4092,5 +4092,5 @@ export interface ChannelMediaOptions {
    This member serves a similar function to the `muteAllRemoteVideoStreams` method. After joining the channel,
    you can call the `muteAllRemoteVideoStreams` method to set whether to subscribe to video streams in the channel.
    */
-  autoSubscribeVideo: boolean;
+  autoSubscribeVideo?: boolean;
 }

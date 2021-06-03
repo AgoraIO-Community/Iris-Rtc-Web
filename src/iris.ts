@@ -46,6 +46,7 @@ import {
   LOG_FILTER_TYPE,
   LOG_LEVEL,
   QUALITY_TYPE,
+  Rect,
   REMOTE_AUDIO_STATE,
   REMOTE_AUDIO_STATE_REASON,
   REMOTE_VIDEO_STATE,
@@ -57,6 +58,7 @@ import {
   RTMP_STREAM_PUBLISH_ERROR,
   RTMP_STREAM_PUBLISH_STATE,
   RTMP_STREAMING_EVENT,
+  ScreenCaptureParameters,
   STREAM_FALLBACK_OPTIONS,
   USER_OFFLINE_REASON_TYPE,
   VIDEO_MIRROR_MODE_TYPE,
@@ -148,6 +150,8 @@ namespace iris {
         this.adjustPlaybackSignalVolume,
       [ApiTypeEngine.kEngineSetRemoteSubscribeFallbackOption]:
         this.setRemoteSubscribeFallbackOption,
+      [ApiTypeEngine.kEngineStopScreenCapture]: this.stopScreenCapture,
+      [ApiTypeEngine.kEngineStartScreenCapture]: this.startScreenCapture,
       [ApiTypeEngine.kEngineGetVersion]: this.getVersion,
       [ApiTypeEngine.kEngineSetEncryptionSecret]: this.setEncryptionSecret,
       [ApiTypeEngine.kEngineSetEncryptionMode]: this.setEncryptionMode,
@@ -510,14 +514,24 @@ namespace iris {
       }
     }
 
-    private async _createScreenVideoTrack() {
+    private async _createScreenVideoTrack(
+      captureParams: ScreenCaptureParameters
+    ) {
       if (!this._enableVideo) {
         printf('_createScreenVideoTrack', this._enableVideo);
         return;
       }
       if (this._localVideoTrack === undefined) {
         this._localVideoTrack = await AgoraRTC.createScreenVideoTrack(
-          {},
+          {
+            encoderConfig: {
+              width: captureParams.dimensions?.width,
+              height: captureParams.dimensions?.height,
+              frameRate: captureParams.frameRate,
+              bitrateMin: captureParams.bitrate,
+              bitrateMax: captureParams.bitrate,
+            },
+          },
           'disable'
         );
       }
@@ -688,13 +702,16 @@ namespace iris {
       return this._client
         ?.join(this._appId, channelId, token, uid)
         .then(async (id) => {
-          await this._createMicrophoneAudioTrack();
-          await this._createCameraVideoTrack();
-          await this._publish();
-          this._emitEvent('JoinChannelSuccess', {
-            channel: channelId,
-            uid: id,
-            elapsed: 0,
+          await Promise.all([
+            this._createMicrophoneAudioTrack(),
+            this._createCameraVideoTrack(),
+            this._publish(),
+          ]).finally(() => {
+            this._emitEvent('JoinChannelSuccess', {
+              channel: channelId,
+              uid: id,
+              elapsed: 0,
+            });
           });
         });
     }
@@ -766,13 +783,16 @@ namespace iris {
       return this._client
         ?.join(this._appId, channelId, token, userAccount)
         .then(async (id) => {
-          await this._createMicrophoneAudioTrack();
-          await this._createCameraVideoTrack();
-          await this._publish();
-          this._emitEvent('JoinChannelSuccess', {
-            channel: channelId,
-            uid: id,
-            elapsed: 0,
+          await Promise.all([
+            this._createMicrophoneAudioTrack(),
+            this._createCameraVideoTrack(),
+            this._publish(),
+          ]).finally(() => {
+            this._emitEvent('JoinChannelSuccess', {
+              channel: channelId,
+              uid: id,
+              elapsed: 0,
+            });
           });
         });
     }
@@ -806,8 +826,8 @@ namespace iris {
         ?.setEncoderConfiguration;
       if (func !== undefined) {
         await func({
-          width: params.config.dimensions.width,
-          height: params.config.dimensions.height,
+          width: params.config.dimensions?.width,
+          height: params.config.dimensions?.height,
           frameRate: params.config.frameRate,
           bitrateMin: params.config.minBitrate,
           bitrateMax: params.config.bitrate,
@@ -819,7 +839,7 @@ namespace iris {
       params: { canvas: VideoCanvas },
       element?: HTMLElement
     ): Promise<void> {
-      let fit: 'cover' | 'contain' | 'fill';
+      let fit: 'cover' | 'contain' | 'fill' = 'cover';
       switch (params.canvas.renderMode) {
         case RENDER_MODE_TYPE.RENDER_MODE_HIDDEN:
           fit = 'cover';
@@ -850,7 +870,7 @@ namespace iris {
         this._remoteVideoTracks.map((track) => {
           if (track.getUserId() === params.canvas.uid) {
             printf('setupRemoteVideo', track, params, element);
-            let fit: 'cover' | 'contain' | 'fill';
+            let fit: 'cover' | 'contain' | 'fill' = 'cover';
             switch (params.canvas.renderMode) {
               case RENDER_MODE_TYPE.RENDER_MODE_HIDDEN:
                 fit = 'cover';
@@ -1221,6 +1241,43 @@ namespace iris {
       );
     }
 
+    public async stopScreenCapture(_: {}): Promise<void> {
+      if (this._localVideoTrack === undefined) return;
+      const func = (this._localVideoTrack as ICameraVideoTrack | undefined)
+        ?.setEncoderConfiguration;
+      if (func === undefined) {
+        this._localVideoTrack.close();
+        this._localVideoTrack = undefined;
+      }
+    }
+
+    public async startScreenCapture(params: {
+      windowId?: number;
+      captureFreq?: number;
+      rect?: Rect;
+      bitrate?: number;
+    }): Promise<void> {
+      const { rect } = params;
+      return this._createScreenVideoTrack({
+        dimensions: {
+          width:
+            rect !== undefined &&
+            rect.right !== undefined &&
+            rect.left !== undefined
+              ? rect.right - rect.left
+              : undefined,
+          height:
+            rect !== undefined &&
+            rect.bottom !== undefined &&
+            rect.top !== undefined
+              ? rect.bottom - rect.top
+              : undefined,
+        },
+        frameRate: params.captureFreq,
+        bitrate: params.bitrate,
+      });
+    }
+
     public async setRemoteSubscribeFallbackOption(params: {
       option: STREAM_FALLBACK_OPTIONS;
     }): Promise<void> {
@@ -1298,7 +1355,7 @@ namespace iris {
       if (this._client === undefined) {
         throw 'please create first';
       }
-      let encryptionMode: EncryptionMode;
+      let encryptionMode: EncryptionMode = 'aes-128-xts';
       if (params.enabled) {
         switch (params.config.encryptionMode) {
           case ENCRYPTION_MODE.AES_128_XTS:
