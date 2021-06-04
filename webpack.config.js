@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    AgoraRtcWrapper: './src/iris.ts',
+    AgoraRtcWrapper: './src/IrisRtcEngine.ts',
   },
   module: {
     rules: [
