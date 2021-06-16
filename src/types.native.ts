@@ -255,7 +255,7 @@ export enum ApiTypeRawDataPluginManager {
   kRDPMGetPlugins,
   kRDPMSetPluginParameter,
   kRDPMGetPluginParameter,
-  kRDPMRelease
+  kRDPMRelease,
 }
 
 export enum INTERFACE_ID_TYPE {

@@ -539,6 +539,7 @@ export default class IrisRtcEngine {
           areaCode = AREAS.GLOBAL;
           break;
       }
+      // TODO support area code array?
       return AgoraRTC.setArea([areaCode]);
     }
   }
@@ -1240,9 +1241,9 @@ export default class IrisRtcEngine {
   }
 
   public async startScreenCaptureByScreenRect(params: {
-    screenRect: Rectangle;
-    regionRect: Rectangle;
-    captureParams: ScreenCaptureParameters;
+    screenRect?: Rectangle;
+    regionRect?: Rectangle;
+    captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
     return this.deviceManager.createScreenVideoTrack(
       this._enableVideo,
@@ -1286,15 +1287,11 @@ export default class IrisRtcEngine {
       {
         dimensions: {
           width:
-            rect !== undefined &&
-              rect.right !== undefined &&
-              rect.left !== undefined
+            rect && rect.right !== undefined && rect.left !== undefined
               ? rect.right - rect.left
               : undefined,
           height:
-            rect !== undefined &&
-              rect.bottom !== undefined &&
-              rect.top !== undefined
+            rect && rect.bottom !== undefined && rect.top !== undefined
               ? rect.bottom - rect.top
               : undefined,
         },
@@ -1351,13 +1348,13 @@ export default class IrisRtcEngine {
 
   public async setEncryptionMode(params: {
     encryptionMode:
-    | 'aes-128-xts'
-    | 'aes-256-xts'
-    | 'aes-128-ecb'
-    | 'sm4-128-ecb'
-    | 'aes-128-gcm'
-    | 'aes-256-gcm'
-    | 'none';
+      | 'aes-128-xts'
+      | 'aes-256-xts'
+      | 'aes-128-ecb'
+      | 'sm4-128-ecb'
+      | 'aes-128-gcm'
+      | 'aes-256-gcm'
+      | 'none';
   }): Promise<void> {
     this._encryptionMode = params.encryptionMode;
     if (this._client === undefined) {

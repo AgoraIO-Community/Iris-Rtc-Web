@@ -49,10 +49,8 @@ export default class IrisRtcDeviceManager {
   private _support_apis_video = {
     [ApiTypeVideoDeviceManager.kVDMEnumerateVideoDevices]:
       this.enumerateVideoDevices,
-    [ApiTypeVideoDeviceManager.kVDMSetDevice]:
-      this.setVideoDeviceId,
-    [ApiTypeVideoDeviceManager.kVDMGetDevice]:
-      this.getVideoDeviceId,
+    [ApiTypeVideoDeviceManager.kVDMSetDevice]: this.setVideoDeviceId,
+    [ApiTypeVideoDeviceManager.kVDMGetDevice]: this.getVideoDeviceId,
   };
 
   public async callApiAudio(
