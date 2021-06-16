@@ -70,6 +70,9 @@ export enum ApiTypeEngine {
   kEnginePauseAllEffects,
   kEngineResumeEffect,
   kEngineResumeAllEffects,
+  kEngineGetEffectDuration,
+  kEngineSetEffectPosition,
+  kEngineGetEffectCurrentPosition,
   kEngineEnableDeepLearningDenoise,
   kEngineEnableSoundPositionIndication,
   kEngineSetRemoteVoicePosition,
@@ -98,6 +101,7 @@ export enum ApiTypeEngine {
   kEngineSetMixedAudioFrameParameters,
   kEngineAdjustRecordingSignalVolume,
   kEngineAdjustPlaybackSignalVolume,
+  kEngineAdjustLoopbackRecordingSignalVolume,
   kEngineEnableWebSdkInteroperability,
   kEngineSetVideoQualityParameters,
   kEngineSetLocalPublishFallbackOption,
@@ -209,31 +213,27 @@ export enum ApiTypeChannel {
 }
 
 export enum ApiTypeAudioDeviceManager {
-  kADMEnumerateAudioPlaybackDevices,
-  kADMGetAudioPlaybackDeviceCount,
-  kADMGetAudioPlaybackDeviceInfoByIndex,
-  kADMSetCurrentAudioPlaybackDeviceId,
-  kADMGetCurrentAudioPlaybackDeviceId,
-  kADMGetCurrentAudioPlaybackDeviceInfo,
-  kADMSetAudioPlaybackDeviceVolume,
-  kADMGetAudioPlaybackDeviceVolume,
-  kADMSetAudioPlaybackDeviceMute,
-  kADMGetAudioPlaybackDeviceMute,
-  kADMStartAudioPlaybackDeviceTest,
-  kADMStopAudioPlaybackDeviceTest,
+  kADMEnumeratePlaybackDevices,
+  kADMSetPlaybackDevice,
+  kADMGetPlaybackDevice,
+  kADMGetPlaybackDeviceInfo,
+  kADMSetPlaybackDeviceVolume,
+  kADMGetPlaybackDeviceVolume,
+  kADMSetPlaybackDeviceMute,
+  kADMGetPlaybackDeviceMute,
+  kADMStartPlaybackDeviceTest,
+  kADMStopPlaybackDeviceTest,
 
-  kADMEnumerateAudioRecordingDevices,
-  kADMGetAudioRecordingDeviceCount,
-  kADMGetAudioRecordingDeviceInfoByIndex,
-  kADMSetCurrentAudioRecordingDeviceId,
-  kADMGetCurrentAudioRecordingDeviceId,
-  kADMGetCurrentAudioRecordingDeviceInfo,
-  kADMSetAudioRecordingDeviceVolume,
-  kADMGetAudioRecordingDeviceVolume,
-  kADMSetAudioRecordingDeviceMute,
-  kADMGetAudioRecordingDeviceMute,
-  kADMStartAudioRecordingDeviceTest,
-  kADMStopAudioRecordingDeviceTest,
+  kADMEnumerateRecordingDevices,
+  kADMSetRecordingDevice,
+  kADMGetRecordingDevice,
+  kADMGetRecordingDeviceInfo,
+  kADMSetRecordingDeviceVolume,
+  kADMGetRecordingDeviceVolume,
+  kADMSetRecordingDeviceMute,
+  kADMGetRecordingDeviceMute,
+  kADMStartRecordingDeviceTest,
+  kADMStopRecordingDeviceTest,
 
   kADMStartAudioDeviceLoopbackTest,
   kADMStopAudioDeviceLoopbackTest,
@@ -241,12 +241,10 @@ export enum ApiTypeAudioDeviceManager {
 
 export enum ApiTypeVideoDeviceManager {
   kVDMEnumerateVideoDevices,
-  kVDMGetVideoDeviceCount,
-  kVDMGetVideoDeviceInfoByIndex,
-  kVDMSetCurrentVideoDeviceId,
-  kVDMGetCurrentVideoDeviceId,
-  kVDMStartVideoDeviceTest,
-  kVDMStopVideoDeviceTest,
+  kVDMSetDevice,
+  kVDMGetDevice,
+  kVDMStartDeviceTest,
+  kVDMStopDeviceTest,
 }
 
 export enum ApiTypeRawDataPluginManager {
@@ -257,7 +255,7 @@ export enum ApiTypeRawDataPluginManager {
   kRDPMGetPlugins,
   kRDPMSetPluginParameter,
   kRDPMGetPluginParameter,
-  kRDPMRelease,
+  kRDPMRelease
 }
 
 export enum INTERFACE_ID_TYPE {

@@ -25,46 +25,34 @@ export default class IrisRtcDeviceManager {
   public readonly remoteVideoTracks: IRemoteVideoTrack[] = [];
   private _audioPlaybackDeviceId?: string;
   private _support_apis_audio = {
-    [ApiTypeAudioDeviceManager.kADMEnumerateAudioPlaybackDevices]:
+    [ApiTypeAudioDeviceManager.kADMEnumeratePlaybackDevices]:
       this.enumerateAudioPlaybackDevices,
-    [ApiTypeAudioDeviceManager.kADMGetAudioPlaybackDeviceCount]:
-      this.getAudioPlaybackDeviceCount,
-    [ApiTypeAudioDeviceManager.kADMGetAudioPlaybackDeviceInfoByIndex]:
-      this.getAudioPlaybackDeviceInfoByIndex,
-    [ApiTypeAudioDeviceManager.kADMSetCurrentAudioPlaybackDeviceId]:
-      this.setCurrentAudioPlaybackDeviceId,
-    [ApiTypeAudioDeviceManager.kADMGetCurrentAudioPlaybackDeviceId]:
-      this.getCurrentAudioPlaybackDeviceId,
-    [ApiTypeAudioDeviceManager.kADMGetCurrentAudioPlaybackDeviceInfo]:
-      this.getCurrentAudioPlaybackDeviceInfo,
-    [ApiTypeAudioDeviceManager.kADMEnumerateAudioRecordingDevices]:
+    [ApiTypeAudioDeviceManager.kADMSetPlaybackDevice]:
+      this.setAudioPlaybackDevice,
+    [ApiTypeAudioDeviceManager.kADMGetPlaybackDevice]:
+      this.getAudioPlaybackDevice,
+    [ApiTypeAudioDeviceManager.kADMGetPlaybackDeviceInfo]:
+      this.getAudioPlaybackDeviceInfo,
+    [ApiTypeAudioDeviceManager.kADMEnumerateRecordingDevices]:
       this.enumerateAudioRecordingDevices,
-    [ApiTypeAudioDeviceManager.kADMGetAudioRecordingDeviceCount]:
-      this.getAudioRecordingDeviceCount,
-    [ApiTypeAudioDeviceManager.kADMGetAudioRecordingDeviceInfoByIndex]:
-      this.getAudioRecordingDeviceInfoByIndex,
-    [ApiTypeAudioDeviceManager.kADMSetCurrentAudioRecordingDeviceId]:
-      this.setCurrentAudioRecordingDeviceId,
-    [ApiTypeAudioDeviceManager.kADMGetCurrentAudioRecordingDeviceId]:
-      this.getCurrentAudioRecordingDeviceId,
-    [ApiTypeAudioDeviceManager.kADMGetCurrentAudioRecordingDeviceInfo]:
-      this.getCurrentAudioRecordingDeviceInfo,
-    [ApiTypeAudioDeviceManager.kADMSetAudioRecordingDeviceVolume]:
+    [ApiTypeAudioDeviceManager.kADMSetRecordingDevice]:
+      this.setAudioRecordingDevice,
+    [ApiTypeAudioDeviceManager.kADMGetRecordingDevice]:
+      this.getAudioRecordingDevice,
+    [ApiTypeAudioDeviceManager.kADMGetRecordingDeviceInfo]:
+      this.getAudioRecordingDeviceInfo,
+    [ApiTypeAudioDeviceManager.kADMSetRecordingDeviceVolume]:
       this.setAudioRecordingDeviceVolume,
-    [ApiTypeAudioDeviceManager.kADMGetAudioRecordingDeviceVolume]:
+    [ApiTypeAudioDeviceManager.kADMGetRecordingDeviceVolume]:
       this.getAudioRecordingDeviceVolume,
   };
   private _support_apis_video = {
     [ApiTypeVideoDeviceManager.kVDMEnumerateVideoDevices]:
       this.enumerateVideoDevices,
-    [ApiTypeVideoDeviceManager.kVDMGetVideoDeviceCount]:
-      this.getVideoDeviceCount,
-    [ApiTypeVideoDeviceManager.kVDMGetVideoDeviceInfoByIndex]:
-      this.getVideoDeviceInfoByIndex,
-    [ApiTypeVideoDeviceManager.kVDMSetCurrentVideoDeviceId]:
-      this.setCurrentVideoDeviceId,
-    [ApiTypeVideoDeviceManager.kVDMGetCurrentVideoDeviceId]:
-      this.getCurrentVideoDeviceId,
+    [ApiTypeVideoDeviceManager.kVDMSetDevice]:
+      this.setVideoDeviceId,
+    [ApiTypeVideoDeviceManager.kVDMGetDevice]:
+      this.getVideoDeviceId,
   };
 
   public async callApiAudio(
@@ -137,7 +125,7 @@ export default class IrisRtcDeviceManager {
 
   public async createScreenVideoTrack(
     enableVideo: boolean,
-    captureParams: ScreenCaptureParameters,
+    captureParams?: ScreenCaptureParameters,
     force: boolean = false
   ) {
     if (!enableVideo) {
@@ -155,11 +143,11 @@ export default class IrisRtcDeviceManager {
     this.localVideoTrack = await AgoraRTC.createScreenVideoTrack(
       {
         encoderConfig: {
-          width: captureParams.dimensions?.width,
-          height: captureParams.dimensions?.height,
-          frameRate: captureParams.frameRate,
-          bitrateMin: captureParams.bitrate,
-          bitrateMax: captureParams.bitrate,
+          width: captureParams?.dimensions?.width,
+          height: captureParams?.dimensions?.height,
+          frameRate: captureParams?.frameRate,
+          bitrateMin: captureParams?.bitrate,
+          bitrateMax: captureParams?.bitrate,
         },
       },
       'disable'
@@ -210,25 +198,7 @@ export default class IrisRtcDeviceManager {
     });
   }
 
-  public async getAudioPlaybackDeviceCount(): Promise<number> {
-    return AgoraRTC.getPlaybackDevices()?.then((res) => {
-      return res.length;
-    });
-  }
-
-  public async getAudioPlaybackDeviceInfoByIndex(params: {
-    index: number;
-  }): Promise<string> {
-    return AgoraRTC.getPlaybackDevices()?.then((res) => {
-      const it = res[params.index];
-      return JSON.stringify({
-        deviceId: it.deviceId,
-        deviceName: it.label,
-      });
-    });
-  }
-
-  public async setCurrentAudioPlaybackDeviceId(params: { deviceId: string }) {
+  public async setAudioPlaybackDevice(params: { deviceId: string }) {
     this._audioPlaybackDeviceId = params.deviceId;
     await Promise.all(
       this.remoteAudioTracks.map((track) => {
@@ -237,11 +207,11 @@ export default class IrisRtcDeviceManager {
     );
   }
 
-  public async getCurrentAudioPlaybackDeviceId(_: {}): Promise<string> {
+  public async getAudioPlaybackDevice(_: {}): Promise<string> {
     return this._audioPlaybackDeviceId ?? '';
   }
 
-  public async getCurrentAudioPlaybackDeviceInfo(_: {}): Promise<string> {
+  public async getAudioPlaybackDeviceInfo(_: {}): Promise<string> {
     return AgoraRTC.getPlaybackDevices()?.then((res) => {
       const it = res.find(
         (value) => value.deviceId === this._audioPlaybackDeviceId
@@ -266,29 +236,11 @@ export default class IrisRtcDeviceManager {
     });
   }
 
-  public async getAudioRecordingDeviceCount(): Promise<number> {
-    return AgoraRTC.getMicrophones()?.then((res) => {
-      return res.length;
-    });
-  }
-
-  public async getAudioRecordingDeviceInfoByIndex(params: {
-    index: number;
-  }): Promise<string> {
-    return AgoraRTC.getMicrophones()?.then((res) => {
-      const it = res[params.index];
-      return JSON.stringify({
-        deviceId: it.deviceId,
-        deviceName: it.label,
-      });
-    });
-  }
-
-  public async setCurrentAudioRecordingDeviceId(params: { deviceId: string }) {
+  public async setAudioRecordingDevice(params: { deviceId: string }) {
     this.localAudioConfig.microphoneId = params.deviceId;
   }
 
-  public async getCurrentAudioRecordingDeviceId(_: {}): Promise<string> {
+  public async getAudioRecordingDevice(_: {}): Promise<string> {
     return this.localAudioConfig.microphoneId ?? '';
   }
 
@@ -300,7 +252,7 @@ export default class IrisRtcDeviceManager {
     return this.localAudioTrack?.getVolumeLevel() ?? 0;
   }
 
-  public async getCurrentAudioRecordingDeviceInfo(_: {}): Promise<string> {
+  public async getAudioRecordingDeviceInfo(_: {}): Promise<string> {
     return AgoraRTC.getMicrophones()?.then((res) => {
       const it = res.find(
         (value) => value.deviceId === this.localAudioConfig.microphoneId
@@ -325,25 +277,7 @@ export default class IrisRtcDeviceManager {
     });
   }
 
-  public async getVideoDeviceCount(): Promise<number> {
-    return AgoraRTC.getCameras()?.then((res) => {
-      return res.length;
-    });
-  }
-
-  public async getVideoDeviceInfoByIndex(params: {
-    index: number;
-  }): Promise<string> {
-    return AgoraRTC.getCameras()?.then((res) => {
-      const it = res[params.index];
-      return JSON.stringify({
-        deviceId: it.deviceId,
-        deviceName: it.label,
-      });
-    });
-  }
-
-  public async setCurrentVideoDeviceId(params: { deviceId: string }) {
+  public async setVideoDeviceId(params: { deviceId: string }) {
     if (this.localVideoConfig !== params.deviceId) {
       this.localVideoConfig.cameraId = params.deviceId;
       if (this.localAudioTrack) {
@@ -352,7 +286,7 @@ export default class IrisRtcDeviceManager {
     }
   }
 
-  public async getCurrentVideoDeviceId(_: {}): Promise<string> {
+  public async getVideoDeviceId(_: {}): Promise<string> {
     return this.localVideoConfig.cameraId ?? '';
   }
 }

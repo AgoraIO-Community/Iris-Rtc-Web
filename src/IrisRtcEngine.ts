@@ -41,6 +41,7 @@ import {
   LOG_FILTER_TYPE,
   LOG_LEVEL,
   Rect,
+  Rectangle,
   REMOTE_AUDIO_STATE,
   REMOTE_AUDIO_STATE_REASON,
   REMOTE_VIDEO_STATE,
@@ -51,6 +52,7 @@ import {
   RtcStats,
   RTMP_STREAM_PUBLISH_STATE,
   RTMP_STREAMING_EVENT,
+  ScreenCaptureParameters,
   STREAM_FALLBACK_OPTIONS,
   VIDEO_MIRROR_MODE_TYPE,
   VideoCanvas,
@@ -146,6 +148,12 @@ export default class IrisRtcEngine {
       this.adjustPlaybackSignalVolume,
     [ApiTypeEngine.kEngineSetRemoteSubscribeFallbackOption]:
       this.setRemoteSubscribeFallbackOption,
+    [ApiTypeEngine.kEngineStartScreenCaptureByDisplayId]:
+      this.startScreenCaptureByDisplayId,
+    [ApiTypeEngine.kEngineStartScreenCaptureByScreenRect]:
+      this.startScreenCaptureByScreenRect,
+    [ApiTypeEngine.kEngineStartScreenCaptureByWindowId]:
+      this.startScreenCaptureByWindowId,
     [ApiTypeEngine.kEngineStopScreenCapture]: this.stopScreenCapture,
     [ApiTypeEngine.kEngineStartScreenCapture]: this.startScreenCapture,
     [ApiTypeEngine.kEngineGetVersion]: this.getVersion,
@@ -1219,6 +1227,42 @@ export default class IrisRtcEngine {
     );
   }
 
+  public async startScreenCaptureByDisplayId(params: {
+    displayId?: number;
+    regionRect?: Rectangle;
+    captureParams?: ScreenCaptureParameters;
+  }): Promise<void> {
+    return this.deviceManager.createScreenVideoTrack(
+      this._enableVideo,
+      params.captureParams,
+      true
+    );
+  }
+
+  public async startScreenCaptureByScreenRect(params: {
+    screenRect: Rectangle;
+    regionRect: Rectangle;
+    captureParams: ScreenCaptureParameters;
+  }): Promise<void> {
+    return this.deviceManager.createScreenVideoTrack(
+      this._enableVideo,
+      params.captureParams,
+      true
+    );
+  }
+
+  public async startScreenCaptureByWindowId(params: {
+    windowId?: number;
+    regionRect?: Rectangle;
+    captureParams?: ScreenCaptureParameters;
+  }): Promise<void> {
+    return this.deviceManager.createScreenVideoTrack(
+      this._enableVideo,
+      params.captureParams,
+      true
+    );
+  }
+
   public async stopScreenCapture(_: {}): Promise<void> {
     if (this.deviceManager.localVideoTrack === undefined) return;
     const func = (
@@ -1243,14 +1287,14 @@ export default class IrisRtcEngine {
         dimensions: {
           width:
             rect !== undefined &&
-            rect.right !== undefined &&
-            rect.left !== undefined
+              rect.right !== undefined &&
+              rect.left !== undefined
               ? rect.right - rect.left
               : undefined,
           height:
             rect !== undefined &&
-            rect.bottom !== undefined &&
-            rect.top !== undefined
+              rect.bottom !== undefined &&
+              rect.top !== undefined
               ? rect.bottom - rect.top
               : undefined,
         },
@@ -1307,13 +1351,13 @@ export default class IrisRtcEngine {
 
   public async setEncryptionMode(params: {
     encryptionMode:
-      | 'aes-128-xts'
-      | 'aes-256-xts'
-      | 'aes-128-ecb'
-      | 'sm4-128-ecb'
-      | 'aes-128-gcm'
-      | 'aes-256-gcm'
-      | 'none';
+    | 'aes-128-xts'
+    | 'aes-256-xts'
+    | 'aes-128-ecb'
+    | 'sm4-128-ecb'
+    | 'aes-128-gcm'
+    | 'aes-256-gcm'
+    | 'none';
   }): Promise<void> {
     this._encryptionMode = params.encryptionMode;
     if (this._client === undefined) {
