@@ -1012,6 +1012,7 @@ export default class IrisRtcEngine {
               elapsed: 0,
             });
           });
+          track.play();
           this.deviceManager.remoteAudioTracks.push(track);
         });
       } else {
