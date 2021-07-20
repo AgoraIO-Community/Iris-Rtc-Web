@@ -789,7 +789,7 @@ export default class IrisRtcEngine {
       this.deviceManager.localVideoTrack as ICameraVideoTrack | undefined
     )?.setEncoderConfiguration;
     if (func !== undefined) {
-      await func({
+      await func.call(this.deviceManager.localVideoTrack, {
         width: params.config.dimensions?.width,
         height: params.config.dimensions?.height,
         frameRate: params.config.frameRate,
@@ -1465,7 +1465,7 @@ export default class IrisRtcEngine {
       this.deviceManager.localVideoTrack as ICameraVideoTrack | undefined
     )?.setBeautyEffect;
     if (func !== undefined) {
-      await func(params.enabled, {
+      await func.call(this.deviceManager.localVideoTrack, params.enabled, {
         smoothnessLevel: params.options.smoothnessLevel,
         lighteningLevel: params.options.lighteningLevel,
         rednessLevel: params.options.rednessLevel,
