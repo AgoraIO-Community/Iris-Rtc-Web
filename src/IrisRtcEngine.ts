@@ -1286,7 +1286,11 @@ export default class IrisRtcEngine {
     captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
     return this.deviceManager
-      .createScreenVideoTrack(this._enableVideo, params.captureParams, true)
+      .createScreenVideoTrack(
+        this._enableVideo && this._enableLocalVideo,
+        params.captureParams,
+        true
+      )
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
@@ -1299,7 +1303,11 @@ export default class IrisRtcEngine {
     captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
     return this.deviceManager
-      .createScreenVideoTrack(this._enableVideo, params.captureParams, true)
+      .createScreenVideoTrack(
+        this._enableVideo && this._enableLocalVideo,
+        params.captureParams,
+        true
+      )
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
@@ -1312,7 +1320,11 @@ export default class IrisRtcEngine {
     captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
     return this.deviceManager
-      .createScreenVideoTrack(this._enableVideo, params.captureParams, true)
+      .createScreenVideoTrack(
+        this._enableVideo && this._enableLocalVideo,
+        params.captureParams,
+        true
+      )
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
@@ -1339,7 +1351,7 @@ export default class IrisRtcEngine {
     const { rect } = params;
     return this.deviceManager
       .createScreenVideoTrack(
-        this._enableVideo,
+        this._enableVideo && this._enableLocalVideo,
         {
           dimensions: {
             width:
