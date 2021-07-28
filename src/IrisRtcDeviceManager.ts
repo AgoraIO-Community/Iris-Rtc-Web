@@ -82,7 +82,7 @@ export default class IrisRtcDeviceManager {
   public async createMicrophoneAudioTrack(
     enableAudio: boolean,
     force: boolean = false
-  ) {
+  ): Promise<ILocalAudioTrack | undefined> {
     if (!enableAudio) {
       printf('createMicrophoneAudioTrack', enableAudio);
       return;
@@ -98,12 +98,13 @@ export default class IrisRtcDeviceManager {
     this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack(
       this.localAudioConfig
     );
+    return this.localAudioTrack;
   }
 
   public async createCameraVideoTrack(
     enableVideo: boolean,
     force: boolean = false
-  ) {
+  ): Promise<ILocalVideoTrack | undefined> {
     if (!enableVideo) {
       printf('createCameraVideoTrack', enableVideo);
       return;
@@ -119,13 +120,14 @@ export default class IrisRtcDeviceManager {
     this.localVideoTrack = await AgoraRTC.createCameraVideoTrack(
       this.localVideoConfig
     );
+    return this.localVideoTrack;
   }
 
   public async createScreenVideoTrack(
     enableVideo: boolean,
     captureParams?: ScreenCaptureParameters,
     force: boolean = false
-  ) {
+  ): Promise<ILocalVideoTrack | undefined> {
     if (!enableVideo) {
       printf('createScreenVideoTrack', enableVideo);
       return;
@@ -150,6 +152,7 @@ export default class IrisRtcDeviceManager {
       },
       'disable'
     );
+    return this.localVideoTrack;
   }
 
   public addRemoteAudioTrack(track: IRemoteAudioTrack) {

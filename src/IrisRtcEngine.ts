@@ -13,6 +13,8 @@
   IAgoraRTCRemoteUser,
   ICameraVideoTrack,
   ILocalTrack,
+  ILocalVideoTrack,
+  IRemoteVideoTrack,
   NetworkQuality,
   RemoteStreamFallbackType,
   RemoteStreamType,
@@ -70,14 +72,15 @@ import {
   RtmpStreamingErrorToNative,
   UserLeftReasonToNative,
 } from './utils';
+import IrisRtcChannel from './IrisRtcChannel';
 
 const AgoraRTC = require('agora-rtc-sdk-ng');
 
 export default class IrisRtcEngine {
   private _mode: SDK_MODE;
   private _client?: IAgoraRTCClient;
-  private _appId?: string;
-  private handler?: (event: string, data: string) => {};
+  private _context?: RtcEngineContext;
+  private _handler?: (event: string, data: string) => void;
   private _enableAudio: boolean;
   private _enableVideo: boolean;
   private _enableLocalAudio: boolean;
@@ -95,6 +98,7 @@ export default class IrisRtcEngine {
     | 'aes-256-gcm'
     | 'none';
   private _secret?: string;
+  public channel: IrisRtcChannel = new IrisRtcChannel(this);
   public deviceManager: IrisRtcDeviceManager = new IrisRtcDeviceManager();
   private _support_apis = {
     [ApiTypeEngine.kEngineInitialize]: this.initialize,
@@ -482,8 +486,8 @@ export default class IrisRtcEngine {
   }
 
   private _emitEvent(methodName: string, data: { [key: string]: any } = {}) {
-    printf('_emitEvent', methodName, data, this.handler);
-    this.handler?.call(this, methodName, JSON.stringify(data));
+    printf('_emitEvent', methodName, data, this._handler);
+    this._handler?.call(this, methodName, JSON.stringify(data));
   }
 
   private _createClient() {
@@ -491,7 +495,9 @@ export default class IrisRtcEngine {
     this._addListener();
   }
 
-  private async _setLogLevel(params: { level?: LOG_LEVEL }): Promise<void> {
+  private static async _setLogLevel(params: {
+    level?: LOG_LEVEL;
+  }): Promise<void> {
     if (params.level !== undefined) {
       let logLevel: number = 0;
       switch (params.level) {
@@ -513,7 +519,7 @@ export default class IrisRtcEngine {
     }
   }
 
-  private async _setArea(code?: AREA_CODE): Promise<void> {
+  private static async _setArea(code?: AREA_CODE): Promise<void> {
     if (code !== undefined) {
       let areaCode: AREAS = AREAS.GLOBAL;
       switch (code) {
@@ -544,22 +550,28 @@ export default class IrisRtcEngine {
     }
   }
 
-  private async _publish() {
+  private async _publish(track?: ILocalTrack) {
     if (this._client === undefined) {
       throw 'please create first';
     }
-    const tracks: ILocalTrack[] = [];
-    if (this.deviceManager.localAudioTrack !== undefined) {
-      if (!this._muteLocalAudio) {
-        tracks.push(this.deviceManager.localAudioTrack);
+    if (track !== undefined) {
+      await this._client.publish(track);
+    } else {
+      const tracks: ILocalTrack[] = [];
+      if (this.deviceManager.localAudioTrack !== undefined) {
+        if (!this._muteLocalAudio) {
+          tracks.push(this.deviceManager.localAudioTrack);
+        }
+      }
+      if (this.deviceManager.localVideoTrack !== undefined) {
+        if (!this._muteLocalVideo) {
+          tracks.push(this.deviceManager.localVideoTrack);
+        }
+      }
+      if (tracks.length > 0) {
+        await this._client.publish(tracks);
       }
     }
-    if (this.deviceManager.localVideoTrack !== undefined) {
-      if (!this._muteLocalVideo) {
-        tracks.push(this.deviceManager.localVideoTrack);
-      }
-    }
-    await this._client.publish(tracks);
   }
 
   public async callApi(
@@ -571,16 +583,32 @@ export default class IrisRtcEngine {
     return this._support_apis[apiType]?.call(this, JSON.parse(params), extra);
   }
 
-  public setEventHandler(handler: (event: string) => {}) {
-    this.handler = handler;
+  public setEventHandler(handler: (event: string, data: string) => void) {
+    this._handler = handler;
+  }
+
+  public async createChannel(): Promise<IrisRtcEngine> {
+    if (this._context === undefined) {
+      throw 'please create first';
+    }
+    const channel = new IrisRtcEngine();
+    channel._mode = this._mode;
+    channel._enableAudio = this._enableAudio;
+    channel._enableLocalAudio = this._enableLocalAudio;
+    channel._enableVideo = this._enableVideo;
+    channel._enableLocalVideo = this._enableLocalVideo;
+    await channel.initialize({ context: this._context });
+    return channel;
   }
 
   public async initialize(params: {
     context: RtcEngineContext;
   }): Promise<void> {
-    this._appId = params.context.appId;
-    await this._setArea(params.context.areaCode);
-    await this._setLogLevel({ level: params.context.logConfig?.level });
+    this._context = params.context;
+    await IrisRtcEngine._setArea(params.context.areaCode);
+    await IrisRtcEngine._setLogLevel({
+      level: params.context.logConfig?.level,
+    });
     this._createClient();
   }
 
@@ -591,8 +619,8 @@ export default class IrisRtcEngine {
     this.deviceManager.localVideoTrack?.close();
     this.deviceManager.localVideoTrack = undefined;
     this._client = undefined;
-    this._appId = undefined;
-    this.handler = undefined;
+    this._context = undefined;
+    this._handler = undefined;
   }
 
   public async setChannelProfile(params: {
@@ -650,18 +678,20 @@ export default class IrisRtcEngine {
     uid?: number | string;
     options?: ChannelMediaOptions;
   }): Promise<void> {
-    if (this._appId === undefined) {
+    if (this._context === undefined) {
       throw 'please create first';
     }
     const { channelId, token, uid } = params;
     return this._client
-      ?.join(this._appId, channelId, token, uid)
+      ?.join(this._context?.appId, channelId, token, uid)
       .then(async (id) => {
         try {
           await this.deviceManager.createMicrophoneAudioTrack(
-            this._enableAudio
+            this._enableAudio && this._enableLocalAudio
           );
-          await this.deviceManager.createCameraVideoTrack(this._enableVideo);
+          await this.deviceManager.createCameraVideoTrack(
+            this._enableVideo && this._enableLocalVideo
+          );
           await this._publish();
         } finally {
           this._emitEvent('JoinChannelSuccess', {
@@ -673,7 +703,7 @@ export default class IrisRtcEngine {
       });
   }
 
-  public async leaveChannel(_: {}): Promise<void> {
+  public async leaveChannel(_?: {}): Promise<void> {
     if (this._client === undefined) {
       throw 'please create first';
     }
@@ -737,18 +767,20 @@ export default class IrisRtcEngine {
     userAccount: string;
     options?: ChannelMediaOptions;
   }): Promise<void> {
-    if (this._appId === undefined) {
+    if (this._context === undefined) {
       throw 'please create first';
     }
     const { channelId, token, userAccount } = params;
     return this._client
-      ?.join(this._appId, channelId, token, userAccount)
+      ?.join(this._context.appId, channelId, token, userAccount)
       .then(async (id) => {
         try {
           await this.deviceManager.createMicrophoneAudioTrack(
-            this._enableAudio
+            this._enableAudio && this._enableLocalAudio
           );
-          await this.deviceManager.createCameraVideoTrack(this._enableVideo);
+          await this.deviceManager.createCameraVideoTrack(
+            this._enableVideo && this._enableLocalVideo
+          );
           await this._publish();
         } finally {
           this._emitEvent('JoinChannelSuccess', {
@@ -760,7 +792,7 @@ export default class IrisRtcEngine {
       });
   }
 
-  public async enableVideo(_: {}): Promise<void> {
+  public async enableVideo(_?: {}): Promise<void> {
     this._enableVideo = true;
     await Promise.all([
       this.enableLocalVideo({ enabled: true }),
@@ -771,7 +803,7 @@ export default class IrisRtcEngine {
     ]);
   }
 
-  public async disableVideo(_: {}): Promise<void> {
+  public async disableVideo(_?: {}): Promise<void> {
     this._enableVideo = false;
     await Promise.all([
       this.enableLocalVideo({ enabled: false }),
@@ -818,7 +850,14 @@ export default class IrisRtcEngine {
         fit = 'fill';
         break;
     }
-    this.deviceManager.localVideoTrack?.play(element ?? params.canvas.view, {
+    const channel = this.channel.getChannel(params.canvas.channelId);
+    let track: ILocalVideoTrack | undefined;
+    if (channel !== undefined) {
+      track = channel.deviceManager.localVideoTrack;
+    } else {
+      track = this.deviceManager.localVideoTrack;
+    }
+    track?.play(element ?? params.canvas.view, {
       mirror:
         params.canvas.mirrorMode ===
         VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED,
@@ -830,8 +869,15 @@ export default class IrisRtcEngine {
     params: { canvas: VideoCanvas },
     element?: HTMLElement
   ): Promise<void> {
+    const channel = this.channel.getChannel(params.canvas.channelId);
+    let tracks: IRemoteVideoTrack[];
+    if (channel !== undefined) {
+      tracks = channel.deviceManager.remoteVideoTracks;
+    } else {
+      tracks = this.deviceManager.remoteVideoTracks;
+    }
     await Promise.all(
-      this.deviceManager.remoteVideoTracks.map((track) => {
+      tracks.map((track) => {
         if (track.getUserId() === params.canvas.uid) {
           printf('setupRemoteVideo', track, params, element);
           let fit: 'cover' | 'contain' | 'fill' = 'cover';
@@ -860,16 +906,19 @@ export default class IrisRtcEngine {
     );
   }
 
-  public async startPreview(_: {}): Promise<void> {
+  public async startPreview(_?: {}): Promise<void> {
     if (this._client === undefined) {
       throw 'please create first';
     }
-    if (!this._enableVideo) return;
+    if (!this._enableVideo || !this._enableLocalVideo) return;
     if (this._client.channelName !== undefined) return;
-    await this.deviceManager.createCameraVideoTrack(this._enableVideo, true);
+    await this.deviceManager.createCameraVideoTrack(
+      this._enableVideo && this._enableLocalVideo,
+      true
+    );
   }
 
-  public async stopPreview(_: {}): Promise<void> {
+  public async stopPreview(_?: {}): Promise<void> {
     if (this._client === undefined) {
       throw 'please create first';
     }
@@ -880,7 +929,7 @@ export default class IrisRtcEngine {
     }
   }
 
-  public async enableAudio(_: {}): Promise<void> {
+  public async enableAudio(_?: {}): Promise<void> {
     this._enableAudio = true;
     await Promise.all([
       this.enableLocalAudio({ enabled: true }),
@@ -892,10 +941,11 @@ export default class IrisRtcEngine {
   }
 
   public async enableLocalAudio(params: { enabled: boolean }): Promise<void> {
+    this._enableLocalAudio = params.enabled;
     return this.deviceManager.localAudioTrack?.setEnabled(params.enabled);
   }
 
-  public async disableAudio(_: {}): Promise<void> {
+  public async disableAudio(_?: {}): Promise<void> {
     this._enableAudio = false;
     await Promise.all([
       this.enableLocalAudio({ enabled: false }),
@@ -1050,6 +1100,7 @@ export default class IrisRtcEngine {
   }
 
   public async enableLocalVideo(params: { enabled: boolean }): Promise<void> {
+    this._enableLocalVideo = params.enabled;
     await this.deviceManager.localVideoTrack?.setEnabled(params.enabled);
   }
 
@@ -1234,11 +1285,12 @@ export default class IrisRtcEngine {
     regionRect?: Rectangle;
     captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
-    return this.deviceManager.createScreenVideoTrack(
-      this._enableVideo,
-      params.captureParams,
-      true
-    );
+    return this.deviceManager
+      .createScreenVideoTrack(this._enableVideo, params.captureParams, true)
+      .then((track) => {
+        if (this._muteLocalVideo) return;
+        this._publish(track);
+      });
   }
 
   public async startScreenCaptureByScreenRect(params: {
@@ -1246,11 +1298,12 @@ export default class IrisRtcEngine {
     regionRect?: Rectangle;
     captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
-    return this.deviceManager.createScreenVideoTrack(
-      this._enableVideo,
-      params.captureParams,
-      true
-    );
+    return this.deviceManager
+      .createScreenVideoTrack(this._enableVideo, params.captureParams, true)
+      .then((track) => {
+        if (this._muteLocalVideo) return;
+        this._publish(track);
+      });
   }
 
   public async startScreenCaptureByWindowId(params: {
@@ -1258,14 +1311,15 @@ export default class IrisRtcEngine {
     regionRect?: Rectangle;
     captureParams?: ScreenCaptureParameters;
   }): Promise<void> {
-    return this.deviceManager.createScreenVideoTrack(
-      this._enableVideo,
-      params.captureParams,
-      true
-    );
+    return this.deviceManager
+      .createScreenVideoTrack(this._enableVideo, params.captureParams, true)
+      .then((track) => {
+        if (this._muteLocalVideo) return;
+        this._publish(track);
+      });
   }
 
-  public async stopScreenCapture(_: {}): Promise<void> {
+  public async stopScreenCapture(_?: {}): Promise<void> {
     if (this.deviceManager.localVideoTrack === undefined) return;
     const func = (
       this.deviceManager.localVideoTrack as ICameraVideoTrack | undefined
@@ -1283,24 +1337,29 @@ export default class IrisRtcEngine {
     bitrate?: number;
   }): Promise<void> {
     const { rect } = params;
-    return this.deviceManager.createScreenVideoTrack(
-      this._enableVideo,
-      {
-        dimensions: {
-          width:
-            rect && rect.right !== undefined && rect.left !== undefined
-              ? rect.right - rect.left
-              : undefined,
-          height:
-            rect && rect.bottom !== undefined && rect.top !== undefined
-              ? rect.bottom - rect.top
-              : undefined,
+    return this.deviceManager
+      .createScreenVideoTrack(
+        this._enableVideo,
+        {
+          dimensions: {
+            width:
+              rect && rect.right !== undefined && rect.left !== undefined
+                ? rect.right - rect.left
+                : undefined,
+            height:
+              rect && rect.bottom !== undefined && rect.top !== undefined
+                ? rect.bottom - rect.top
+                : undefined,
+          },
+          frameRate: params.captureFreq,
+          bitrate: params.bitrate,
         },
-        frameRate: params.captureFreq,
-        bitrate: params.bitrate,
-      },
-      true
-    );
+        true
+      )
+      .then((track) => {
+        if (this._muteLocalVideo) return;
+        this._publish(track);
+      });
   }
 
   public async setRemoteSubscribeFallbackOption(params: {
@@ -1521,7 +1580,7 @@ export default class IrisRtcEngine {
     return this._client.updateChannelMediaRelay(config);
   }
 
-  public async stopChannelMediaRelay(_: {}): Promise<void> {
+  public async stopChannelMediaRelay(_?: {}): Promise<void> {
     if (this._client === undefined) {
       throw 'please create first';
     }
@@ -1554,7 +1613,7 @@ export default class IrisRtcEngine {
     });
   }
 
-  public async getConnectionState(_: {}): Promise<CONNECTION_STATE_TYPE> {
+  public async getConnectionState(_?: {}): Promise<CONNECTION_STATE_TYPE> {
     if (this._client === undefined) {
       throw 'please create first';
     }
