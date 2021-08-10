@@ -160,6 +160,13 @@ export default class IrisRtcDeviceManager {
     this.remoteAudioTracks.push(track);
   }
 
+  public getRemoteAudioTrack(uid: UID): IRemoteAudioTrack | undefined {
+    const index = this.remoteAudioTracks.findIndex(
+      (value) => value.getUserId() === uid
+    );
+    return this.remoteAudioTracks[index];
+  }
+
   public removeRemoteAudioTrack(uid: UID) {
     const index = this.remoteAudioTracks.findIndex(
       (value) => value.getUserId() === uid
@@ -173,6 +180,13 @@ export default class IrisRtcDeviceManager {
 
   public addRemoteVideoTrack(track: IRemoteVideoTrack) {
     this.remoteVideoTracks.push(track);
+  }
+
+  public getRemoteVideoTrack(uid: UID): IRemoteVideoTrack | undefined {
+    const index = this.remoteVideoTracks.findIndex(
+      (value) => value.getUserId() === uid
+    );
+    return this.remoteVideoTracks[index];
   }
 
   public removeRemoteVideoTrack(uid: UID) {

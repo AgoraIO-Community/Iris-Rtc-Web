@@ -119,7 +119,7 @@ export default class IrisRtcChannel {
     channelId: string;
     token: string | null;
     info?: string;
-    uid?: number | string;
+    uid: UID;
     options?: ChannelMediaOptions;
   }): Promise<void> {
     const { channelId } = params;

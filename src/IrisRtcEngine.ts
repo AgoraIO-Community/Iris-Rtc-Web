@@ -100,6 +100,7 @@ export default class IrisRtcEngine {
   private _secret?: string;
   public channel: IrisRtcChannel = new IrisRtcChannel(this);
   public deviceManager: IrisRtcDeviceManager = new IrisRtcDeviceManager();
+  private _canvasMap = new Map<UID, VideoCanvas>();
   private _support_apis = {
     [ApiTypeEngine.kEngineInitialize]: this.initialize,
     [ApiTypeEngine.kEngineRelease]: this.release,
@@ -675,7 +676,7 @@ export default class IrisRtcEngine {
     token: string | null;
     channelId: string;
     info?: string;
-    uid?: number | string;
+    uid: UID;
     options?: ChannelMediaOptions;
   }): Promise<void> {
     if (this._context === undefined) {
@@ -689,9 +690,11 @@ export default class IrisRtcEngine {
           await this.deviceManager.createMicrophoneAudioTrack(
             this._enableAudio && this._enableLocalAudio
           );
-          await this.deviceManager.createCameraVideoTrack(
-            this._enableVideo && this._enableLocalVideo
-          );
+          await this.deviceManager
+            .createCameraVideoTrack(this._enableVideo && this._enableLocalVideo)
+            .then((track) => {
+              this.setupVideo(track, this._canvasMap.get(uid));
+            });
           await this._publish();
         } finally {
           this._emitEvent('JoinChannelSuccess', {
@@ -778,9 +781,11 @@ export default class IrisRtcEngine {
           await this.deviceManager.createMicrophoneAudioTrack(
             this._enableAudio && this._enableLocalAudio
           );
-          await this.deviceManager.createCameraVideoTrack(
-            this._enableVideo && this._enableLocalVideo
-          );
+          await this.deviceManager
+            .createCameraVideoTrack(this._enableVideo && this._enableLocalVideo)
+            .then((track) => {
+              this.setupVideo(track, this._canvasMap.get(userAccount));
+            });
           await this._publish();
         } finally {
           this._emitEvent('JoinChannelSuccess', {
@@ -835,75 +840,81 @@ export default class IrisRtcEngine {
     params: { canvas: VideoCanvas },
     element?: HTMLElement
   ): Promise<void> {
-    let fit: 'cover' | 'contain' | 'fill' = 'cover';
-    switch (params.canvas.renderMode) {
-      case RENDER_MODE_TYPE.RENDER_MODE_HIDDEN:
-        fit = 'cover';
-        break;
-      case RENDER_MODE_TYPE.RENDER_MODE_FIT:
-        fit = 'contain';
-        break;
-      case RENDER_MODE_TYPE.RENDER_MODE_ADAPTIVE:
-        fit = 'cover';
-        break;
-      case RENDER_MODE_TYPE.RENDER_MODE_FILL:
-        fit = 'fill';
-        break;
+    const { canvas } = params;
+    if (element !== undefined) {
+      canvas.view = element;
     }
-    const channel = this.channel.getChannel(params.canvas.channelId);
+    const channel = this.channel.getChannel(canvas.channelId);
     let track: ILocalVideoTrack | undefined;
     if (channel !== undefined) {
       track = channel.deviceManager.localVideoTrack;
+      channel._canvasMap.set(canvas.uid, canvas);
     } else {
       track = this.deviceManager.localVideoTrack;
+      this._canvasMap.set(canvas.uid, canvas);
     }
-    track?.play(element ?? params.canvas.view, {
-      mirror:
-        params.canvas.mirrorMode ===
-        VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED,
-      fit,
-    });
+    this.setupVideo(track, canvas);
   }
 
   public async setupRemoteVideo(
     params: { canvas: VideoCanvas },
     element?: HTMLElement
   ): Promise<void> {
-    const channel = this.channel.getChannel(params.canvas.channelId);
-    let tracks: IRemoteVideoTrack[];
-    if (channel !== undefined) {
-      tracks = channel.deviceManager.remoteVideoTracks;
-    } else {
-      tracks = this.deviceManager.remoteVideoTracks;
+    const { canvas } = params;
+    if (element !== undefined) {
+      canvas.view = element;
     }
-    await Promise.all(
-      tracks.map((track) => {
-        if (track.getUserId() === params.canvas.uid) {
-          printf('setupRemoteVideo', track, params, element);
-          let fit: 'cover' | 'contain' | 'fill' = 'cover';
-          switch (params.canvas.renderMode) {
-            case RENDER_MODE_TYPE.RENDER_MODE_HIDDEN:
-              fit = 'cover';
-              break;
-            case RENDER_MODE_TYPE.RENDER_MODE_FIT:
-              fit = 'contain';
-              break;
-            case RENDER_MODE_TYPE.RENDER_MODE_ADAPTIVE:
-              fit = 'cover';
-              break;
-            case RENDER_MODE_TYPE.RENDER_MODE_FILL:
-              fit = 'fill';
-              break;
-          }
-          track.play(element ?? params.canvas.view, {
-            mirror:
-              params.canvas.mirrorMode ===
-              VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED,
-            fit,
-          });
-        }
-      })
-    );
+    const channel = this.channel.getChannel(canvas.channelId);
+    let track: IRemoteVideoTrack | undefined;
+    if (channel !== undefined) {
+      track = channel.deviceManager.getRemoteVideoTrack(canvas.uid);
+      channel._canvasMap.set(canvas.uid, canvas);
+    } else {
+      track = this.deviceManager.getRemoteVideoTrack(canvas.uid);
+      this._canvasMap.set(canvas.uid, canvas);
+    }
+    this.setupVideo(track, canvas);
+  }
+
+  private setupVideo(
+    track: ILocalVideoTrack | IRemoteVideoTrack | undefined,
+    canvas?: VideoCanvas
+  ) {
+    let userId;
+    const func = (track as IRemoteVideoTrack | undefined)?.getUserId;
+    if (func === undefined) {
+      userId = 0;
+    } else {
+      userId = func.call(track);
+    }
+    if (canvas === undefined) return;
+    if (userId === canvas.uid) {
+      let fit: 'cover' | 'contain' | 'fill' = 'cover';
+      switch (canvas.renderMode) {
+        case RENDER_MODE_TYPE.RENDER_MODE_HIDDEN:
+          fit = 'cover';
+          break;
+        case RENDER_MODE_TYPE.RENDER_MODE_FIT:
+          fit = 'contain';
+          break;
+        case RENDER_MODE_TYPE.RENDER_MODE_ADAPTIVE:
+          fit = 'cover';
+          break;
+        case RENDER_MODE_TYPE.RENDER_MODE_FILL:
+          fit = 'fill';
+          break;
+      }
+      const div = canvas.view as HTMLDivElement;
+      for (let i = 0; i < div.children.length; i++) {
+        div.removeChild(div.children.item(i)!);
+      }
+      track?.play(div, {
+        mirror:
+          canvas.mirrorMode ===
+          VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED,
+        fit,
+      });
+    }
   }
 
   public async startPreview(_?: {}): Promise<void> {
@@ -912,10 +923,11 @@ export default class IrisRtcEngine {
     }
     if (!this._enableVideo || !this._enableLocalVideo) return;
     if (this._client.channelName !== undefined) return;
-    await this.deviceManager.createCameraVideoTrack(
-      this._enableVideo && this._enableLocalVideo,
-      true
-    );
+    return this.deviceManager
+      .createCameraVideoTrack(this._enableVideo && this._enableLocalVideo, true)
+      .then((track) => {
+        this.setupVideo(track, this._canvasMap.get(0));
+      });
   }
 
   public async stopPreview(_?: {}): Promise<void> {
@@ -1062,8 +1074,8 @@ export default class IrisRtcEngine {
               elapsed: 0,
             });
           });
+          this.deviceManager.addRemoteAudioTrack(track);
           track.play();
-          this.deviceManager.remoteAudioTracks.push(track);
         });
       } else {
         return this._client.unsubscribe(user, 'audio').then(() => {
@@ -1151,7 +1163,11 @@ export default class IrisRtcEngine {
               elapsed: 0,
             });
           });
-          this.deviceManager.remoteVideoTracks.push(track);
+          this.deviceManager.addRemoteVideoTrack(track);
+          this.setupVideo(
+            this.deviceManager.getRemoteVideoTrack(user.uid),
+            this._canvasMap.get(user.uid)
+          );
         });
       } else {
         return this._client.unsubscribe(user, 'video').then(() => {
@@ -1294,6 +1310,7 @@ export default class IrisRtcEngine {
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
+        this.setupVideo(track, this._canvasMap.get(0));
       });
   }
 
@@ -1311,6 +1328,7 @@ export default class IrisRtcEngine {
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
+        this.setupVideo(track, this._canvasMap.get(0));
       });
   }
 
@@ -1328,6 +1346,7 @@ export default class IrisRtcEngine {
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
+        this.setupVideo(track, this._canvasMap.get(0));
       });
   }
 
@@ -1371,6 +1390,7 @@ export default class IrisRtcEngine {
       .then((track) => {
         if (this._muteLocalVideo) return;
         this._publish(track);
+        this.setupVideo(track, this._canvasMap.get(0));
       });
   }
 
