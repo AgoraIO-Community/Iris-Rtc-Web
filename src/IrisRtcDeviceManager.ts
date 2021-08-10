@@ -92,7 +92,7 @@ export default class IrisRtcDeviceManager {
         this.localAudioTrack.close();
         this.localAudioTrack = undefined;
       } else {
-        return;
+        return this.localAudioTrack;
       }
     }
     this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack(
@@ -114,7 +114,7 @@ export default class IrisRtcDeviceManager {
         this.localVideoTrack.close();
         this.localVideoTrack = undefined;
       } else {
-        return;
+        return this.localVideoTrack;
       }
     }
     this.localVideoTrack = await AgoraRTC.createCameraVideoTrack(
@@ -137,7 +137,7 @@ export default class IrisRtcDeviceManager {
         this.localVideoTrack.close();
         this.localVideoTrack = undefined;
       } else {
-        return;
+        return this.localVideoTrack;
       }
     }
     this.localVideoTrack = await AgoraRTC.createScreenVideoTrack(
