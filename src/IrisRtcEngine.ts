@@ -880,7 +880,7 @@ export default class IrisRtcEngine {
     track: ILocalVideoTrack | IRemoteVideoTrack | undefined,
     canvas?: VideoCanvas
   ) {
-    let userId;
+    let userId: number;
     const func = (track as IRemoteVideoTrack | undefined)?.getUserId;
     if (func === undefined) {
       userId = 0;
@@ -908,10 +908,19 @@ export default class IrisRtcEngine {
       for (let i = 0; i < div.children.length; i++) {
         div.removeChild(div.children.item(i)!);
       }
-      track?.play(div, {
-        mirror:
+      let mirror: boolean;
+      if (userId === 0) {
+        mirror =
+          canvas.mirrorMode === VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_AUTO ||
           canvas.mirrorMode ===
-          VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED,
+            VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED;
+      } else {
+        mirror =
+          canvas.mirrorMode ===
+          VIDEO_MIRROR_MODE_TYPE.VIDEO_MIRROR_MODE_ENABLED;
+      }
+      track?.play(div, {
+        mirror,
         fit,
       });
     }
