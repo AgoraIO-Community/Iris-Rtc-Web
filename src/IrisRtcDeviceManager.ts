@@ -140,7 +140,7 @@ export default class IrisRtcDeviceManager {
         return this.localVideoTrack;
       }
     }
-    const [videoTrack, audioTrack] = await AgoraRTC.createScreenVideoTrack(
+    const track = await AgoraRTC.createScreenVideoTrack(
       {
         encoderConfig: {
           width: captureParams?.dimensions?.width,
@@ -152,8 +152,14 @@ export default class IrisRtcDeviceManager {
       },
       'auto'
     );
-    this.localVideoTrack = videoTrack;
-    this.localAudioTrack = audioTrack;
+    const func = (track as ILocalVideoTrack | undefined)?.play;
+    if (func !== undefined) {
+      this.localVideoTrack = track;
+    } else {
+      const [videoTrack, audioTrack] = track;
+      this.localVideoTrack = videoTrack;
+      this.localAudioTrack = audioTrack;
+    }
     return this.localVideoTrack;
   }
 
