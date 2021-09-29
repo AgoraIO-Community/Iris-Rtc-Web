@@ -235,8 +235,9 @@ export default class IrisRtcEngine {
         printf('user-published', user, mediaType);
         switch (mediaType) {
           case 'audio':
-            // TODO
-            // emitEvent('AudioPublishStateChanged', []);
+            if (!this._enableAudio || this._defaultMuteAllRemoteAudioStreams)
+              return;
+            // TODO emitEvent('AudioPublishStateChanged', []);
             await this.muteRemoteAudioStream({ userId: user, mute: false });
             this._emitEvent('RemoteAudioStateChanged', {
               uid: user.uid,
@@ -247,8 +248,9 @@ export default class IrisRtcEngine {
             });
             break;
           case 'video':
-            // TODO
-            // emitEvent('VideoPublishStateChanged', []);
+            if (!this._enableVideo || this._defaultMuteAllRemoteVideoStreams)
+              return;
+            // TODO emitEvent('VideoPublishStateChanged', []);
             await this.muteRemoteVideoStream({ userId: user, mute: false });
             this._emitEvent('RemoteVideoStateChanged', {
               uid: user.uid,
@@ -267,8 +269,7 @@ export default class IrisRtcEngine {
         printf('user-unpublished', user, mediaType);
         switch (mediaType) {
           case 'audio':
-            // TODO
-            // emitEvent('AudioPublishStateChanged', []);
+            // TODO emitEvent('AudioPublishStateChanged', []);
             this.deviceManager.removeRemoteAudioTrack(user.uid);
             this._emitEvent('RemoteAudioStateChanged', {
               uid: user.uid,
@@ -279,8 +280,7 @@ export default class IrisRtcEngine {
             });
             break;
           case 'video':
-            // TODO
-            // emitEvent('VideoPublishStateChanged', []);
+            // TODO emitEvent('VideoPublishStateChanged', []);
             this.deviceManager.removeRemoteVideoTrack(user.uid);
             this._emitEvent('RemoteVideoStateChanged', {
               uid: user.uid,
@@ -520,34 +520,28 @@ export default class IrisRtcEngine {
     }
   }
 
-  private static async _setArea(code?: AREA_CODE): Promise<void> {
-    if (code !== undefined) {
-      let areaCode: AREAS = AREAS.GLOBAL;
-      switch (code) {
-        case AREA_CODE.AREA_CODE_CN:
-          areaCode = AREAS.CHINA;
-          break;
-        case AREA_CODE.AREA_CODE_NA:
-          areaCode = AREAS.NORTH_AMERICA;
-          break;
-        case AREA_CODE.AREA_CODE_EU:
-          areaCode = AREAS.EUROPE;
-          break;
-        case AREA_CODE.AREA_CODE_AS:
-          areaCode = AREAS.ASIA;
-          break;
-        case AREA_CODE.AREA_CODE_JP:
-          areaCode = AREAS.JAPAN;
-          break;
-        case AREA_CODE.AREA_CODE_IN:
-          areaCode = AREAS.INDIA;
-          break;
-        case AREA_CODE.AREA_CODE_GLOB:
-          areaCode = AREAS.GLOBAL;
-          break;
-      }
-      // TODO support area code array?
-      return AgoraRTC.setArea([areaCode]);
+  private static async _setArea(areaCodes?: AREA_CODE[]): Promise<void> {
+    if (areaCodes !== undefined) {
+      return AgoraRTC.setArea(
+        areaCodes.map((value) => {
+          switch (value) {
+            case AREA_CODE.AREA_CODE_CN:
+              return AREAS.CHINA;
+            case AREA_CODE.AREA_CODE_NA:
+              return AREAS.NORTH_AMERICA;
+            case AREA_CODE.AREA_CODE_EU:
+              return AREAS.EUROPE;
+            case AREA_CODE.AREA_CODE_AS:
+              return AREAS.ASIA;
+            case AREA_CODE.AREA_CODE_JP:
+              return AREAS.JAPAN;
+            case AREA_CODE.AREA_CODE_IN:
+              return AREAS.INDIA;
+            case AREA_CODE.AREA_CODE_GLOB:
+              return AREAS.GLOBAL;
+          }
+        })
+      );
     }
   }
 
@@ -801,9 +795,8 @@ export default class IrisRtcEngine {
     this._enableVideo = true;
     await Promise.all([
       this.enableLocalVideo({ enabled: true }),
-      // TODO
       this.deviceManager.remoteVideoTracks.map((track) => {
-        return track.play('');
+        this.setupVideo(track, this._canvasMap.get(track.getUserId()));
       }),
     ]);
   }
@@ -812,7 +805,6 @@ export default class IrisRtcEngine {
     this._enableVideo = false;
     await Promise.all([
       this.enableLocalVideo({ enabled: false }),
-      // TODO
       this.deviceManager.remoteVideoTracks.map((track) => {
         return track.stop();
       }),
@@ -954,7 +946,6 @@ export default class IrisRtcEngine {
     this._enableAudio = true;
     await Promise.all([
       this.enableLocalAudio({ enabled: true }),
-      // TODO
       this.deviceManager.remoteAudioTracks.map((track) => {
         return track.play();
       }),
@@ -970,7 +961,6 @@ export default class IrisRtcEngine {
     this._enableAudio = false;
     await Promise.all([
       this.enableLocalAudio({ enabled: false }),
-      // TODO
       this.deviceManager.remoteAudioTracks.map((track) => {
         return track.stop();
       }),

@@ -3997,7 +3997,7 @@ export interface RtcEngineContext {
    *
    * @note The SDK supports specify only one region.
    */
-  areaCode?: number;
+  areaCode?: AREA_CODE[];
   /** The configuration of the log files that the SDK outputs. See LogConfig.
    *
    * @since v3.3.0
