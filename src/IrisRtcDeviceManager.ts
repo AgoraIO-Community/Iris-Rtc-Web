@@ -10,6 +10,10 @@ import {
 import {
   ApiTypeAudioDeviceManager,
   ApiTypeVideoDeviceManager,
+  LOCAL_AUDIO_STREAM_ERROR,
+  LOCAL_AUDIO_STREAM_STATE,
+  LOCAL_VIDEO_STREAM_ERROR,
+  LOCAL_VIDEO_STREAM_STATE,
   ScreenCaptureParameters,
 } from './types.native';
 import { printf } from './utils';
@@ -81,6 +85,7 @@ export default class IrisRtcDeviceManager {
 
   public async createMicrophoneAudioTrack(
     enableAudio: boolean,
+    callback: Function,
     force: boolean = false
   ): Promise<ILocalAudioTrack | undefined> {
     if (!enableAudio) {
@@ -98,15 +103,22 @@ export default class IrisRtcDeviceManager {
     this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack(
       this.localAudioConfig
     );
+    this.localAudioTrack?.on('track-ended', () => {
+      callback('LocalAudioStateChanged', {
+        state: LOCAL_AUDIO_STREAM_STATE.LOCAL_AUDIO_STREAM_STATE_FAILED,
+        error: LOCAL_AUDIO_STREAM_ERROR.LOCAL_AUDIO_STREAM_ERROR_RECORD_FAILURE,
+      });
+    });
     return this.localAudioTrack;
   }
 
   public async createCameraVideoTrack(
     enableVideo: boolean,
+    callback: Function,
     force: boolean = false
   ): Promise<ILocalVideoTrack | undefined> {
     if (!enableVideo) {
-      printf('createCameraVideoTrack', enableVideo);
+      printf('CreateCameraVideoTrack', enableVideo);
       return;
     }
     if (this.localVideoTrack) {
@@ -120,11 +132,20 @@ export default class IrisRtcDeviceManager {
     this.localVideoTrack = await AgoraRTC.createCameraVideoTrack(
       this.localVideoConfig
     );
+    this.localVideoTrack?.on('track-ended', () => {
+      callback('LocalVideoStateChanged', {
+        localVideoState:
+          LOCAL_VIDEO_STREAM_STATE.LOCAL_VIDEO_STREAM_STATE_FAILED,
+        error:
+          LOCAL_VIDEO_STREAM_ERROR.LOCAL_VIDEO_STREAM_ERROR_CAPTURE_FAILURE,
+      });
+    });
     return this.localVideoTrack;
   }
 
   public async createScreenVideoTrack(
     enableVideo: boolean,
+    callback: Function,
     captureParams?: ScreenCaptureParameters,
     force: boolean = false
   ): Promise<ILocalVideoTrack | undefined> {
@@ -159,7 +180,22 @@ export default class IrisRtcDeviceManager {
       const [videoTrack, audioTrack] = track;
       this.localVideoTrack = videoTrack;
       this.localAudioTrack = audioTrack;
+      this.localAudioTrack?.on('track-ended', () => {
+        callback('LocalAudioStateChanged', {
+          state: LOCAL_AUDIO_STREAM_STATE.LOCAL_AUDIO_STREAM_STATE_FAILED,
+          error:
+            LOCAL_AUDIO_STREAM_ERROR.LOCAL_AUDIO_STREAM_ERROR_RECORD_FAILURE,
+        });
+      });
     }
+    this.localVideoTrack?.on('track-ended', () => {
+      callback('LocalVideoStateChanged', {
+        localVideoState:
+          LOCAL_VIDEO_STREAM_STATE.LOCAL_VIDEO_STREAM_STATE_FAILED,
+        error:
+          LOCAL_VIDEO_STREAM_ERROR.LOCAL_VIDEO_STREAM_ERROR_CAPTURE_FAILURE,
+      });
+    });
     return this.localVideoTrack;
   }
 

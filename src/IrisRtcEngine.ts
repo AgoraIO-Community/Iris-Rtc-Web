@@ -682,10 +682,14 @@ export default class IrisRtcEngine {
       .then(async (id) => {
         try {
           await this.deviceManager.createMicrophoneAudioTrack(
-            this._enableAudio && this._enableLocalAudio
+            this._enableAudio && this._enableLocalAudio,
+            this._emitEvent.bind(this)
           );
           await this.deviceManager
-            .createCameraVideoTrack(this._enableVideo && this._enableLocalVideo)
+            .createCameraVideoTrack(
+              this._enableVideo && this._enableLocalVideo,
+              this._emitEvent.bind(this)
+            )
             .then((track) => {
               this.setupVideo(track, this._canvasMap.get(uid));
             });
@@ -773,10 +777,14 @@ export default class IrisRtcEngine {
       .then(async (id) => {
         try {
           await this.deviceManager.createMicrophoneAudioTrack(
-            this._enableAudio && this._enableLocalAudio
+            this._enableAudio && this._enableLocalAudio,
+            this._emitEvent.bind(this)
           );
           await this.deviceManager
-            .createCameraVideoTrack(this._enableVideo && this._enableLocalVideo)
+            .createCameraVideoTrack(
+              this._enableVideo && this._enableLocalVideo,
+              this._emitEvent.bind(this)
+            )
             .then((track) => {
               this.setupVideo(track, this._canvasMap.get(userAccount));
             });
@@ -925,7 +933,11 @@ export default class IrisRtcEngine {
     if (!this._enableVideo || !this._enableLocalVideo) return;
     if (this._client.channelName !== undefined) return;
     return this.deviceManager
-      .createCameraVideoTrack(this._enableVideo && this._enableLocalVideo, true)
+      .createCameraVideoTrack(
+        this._enableVideo && this._enableLocalVideo,
+        this._emitEvent.bind(this),
+        true
+      )
       .then((track) => {
         this.setupVideo(track, this._canvasMap.get(0));
       });
@@ -1303,6 +1315,7 @@ export default class IrisRtcEngine {
     return this.deviceManager
       .createScreenVideoTrack(
         this._enableVideo && this._enableLocalVideo,
+        this._emitEvent.bind(this),
         params.captureParams,
         true
       )
@@ -1321,6 +1334,7 @@ export default class IrisRtcEngine {
     return this.deviceManager
       .createScreenVideoTrack(
         this._enableVideo && this._enableLocalVideo,
+        this._emitEvent.bind(this),
         params.captureParams,
         true
       )
@@ -1339,6 +1353,7 @@ export default class IrisRtcEngine {
     return this.deviceManager
       .createScreenVideoTrack(
         this._enableVideo && this._enableLocalVideo,
+        this._emitEvent.bind(this),
         params.captureParams,
         true
       )
@@ -1370,6 +1385,7 @@ export default class IrisRtcEngine {
     return this.deviceManager
       .createScreenVideoTrack(
         this._enableVideo && this._enableLocalVideo,
+        this._emitEvent.bind(this),
         {
           dimensions: {
             width:
