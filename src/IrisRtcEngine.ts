@@ -28,6 +28,7 @@ import {
   AUDIENCE_LATENCY_LEVEL_TYPE,
   AUDIO_PROFILE_TYPE,
   AUDIO_SCENARIO_TYPE,
+  AudioVolumeInfo,
   BeautyOptions,
   CHANNEL_PROFILE_TYPE,
   ChannelMediaOptions,
@@ -400,8 +401,15 @@ export default class IrisRtcEngine {
         printf('volume-indicator', result);
         let totalVolume = 0;
         const speakers = result.map((value) => {
-          totalVolume += value.level;
-          return { uid: value.uid, volume: value.level };
+          const level = Math.floor((value.level / 100) * 255);
+          totalVolume += level;
+          const volume: AudioVolumeInfo = {
+            uid: +value.uid,
+            volume: level,
+            vad: 0,
+            channelId: this._client?.channelName ?? '',
+          };
+          return volume;
         });
         this._emitEvent('AudioVolumeIndication', {
           speakers: speakers,
@@ -427,6 +435,20 @@ export default class IrisRtcEngine {
         txQuality: NetworkQualityToNative(stats.uplinkNetworkQuality),
         rxQuality: NetworkQualityToNative(stats.downlinkNetworkQuality),
       });
+      const qualities = this._client?.getRemoteNetworkQuality();
+      if (qualities) {
+        for (const it in qualities) {
+          this._emitEvent('NetworkQuality', {
+            uid: +it,
+            txQuality: NetworkQualityToNative(
+              qualities[it].uplinkNetworkQuality
+            ),
+            rxQuality: NetworkQualityToNative(
+              qualities[it].downlinkNetworkQuality
+            ),
+          });
+        }
+      }
     });
     this._client.on(
       'live-streaming-error',
