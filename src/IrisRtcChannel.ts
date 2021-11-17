@@ -15,10 +15,9 @@ import { printf } from './utils';
 import { UID } from 'agora-rtc-sdk-ng';
 
 export default class IrisRtcChannel {
-  public _engine: IrisRtcEngine;
+  private _engine: IrisRtcEngine;
   private _handler?: (event: string, data: string) => void;
   private _channels = new Map<string, IrisRtcEngine>();
-
   private _support_apis = {
     [ApiTypeChannel.kChannelCreateChannel]: this.createChannel,
     [ApiTypeChannel.kChannelRelease]: this.release,
@@ -70,6 +69,12 @@ export default class IrisRtcChannel {
     this._engine = engine;
   }
 
+  /**
+   * Iris callApi for channel
+   * @param apiType
+   * @param params
+   * @param extra
+   */
   public async callApi(
     apiType: ApiTypeChannel,
     params: string,
@@ -79,6 +84,10 @@ export default class IrisRtcChannel {
     return this._support_apis[apiType]?.call(this, JSON.parse(params), extra);
   }
 
+  /**
+   * Register event handler
+   * @param handler
+   */
   public setEventHandler(handler: (event: string, data: string) => void) {
     this._handler = handler;
   }
@@ -87,7 +96,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId);
   }
 
-  public async createChannel(params: { channelId: string }): Promise<void> {
+  private async createChannel(params: { channelId: string }): Promise<void> {
     const { channelId } = params;
     if (this._channels.has(channelId)) {
       return;
@@ -106,7 +115,7 @@ export default class IrisRtcChannel {
     this._channels.set(channelId, channel);
   }
 
-  public async release(params: { channelId: string }): Promise<void> {
+  private async release(params: { channelId: string }): Promise<void> {
     const { channelId } = params;
     if (!this._channels.has(channelId)) {
       throw 'please create first';
@@ -115,7 +124,7 @@ export default class IrisRtcChannel {
     this._channels.delete(channelId);
   }
 
-  public async joinChannel(params: {
+  private async joinChannel(params: {
     channelId: string;
     token: string | null;
     info?: string;
@@ -132,7 +141,7 @@ export default class IrisRtcChannel {
       ?.joinChannel({ token, channelId, info, uid, options });
   }
 
-  public async joinChannelWithUserAccount(params: {
+  private async joinChannelWithUserAccount(params: {
     token: string | null;
     channelId: string;
     userAccount: string;
@@ -148,7 +157,7 @@ export default class IrisRtcChannel {
       ?.joinChannelWithUserAccount({ token, channelId, userAccount, options });
   }
 
-  public async leaveChannel(params: { channelId: string }): Promise<void> {
+  private async leaveChannel(params: { channelId: string }): Promise<void> {
     const { channelId } = params;
     if (!this._channels.has(channelId)) {
       throw 'please create first';
@@ -156,7 +165,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.leaveChannel();
   }
 
-  public async publish(params: { channelId: string }): Promise<void> {
+  private async publish(params: { channelId: string }): Promise<void> {
     const { channelId } = params;
     if (!this._channels.has(channelId)) {
       throw 'please create first';
@@ -165,7 +174,7 @@ export default class IrisRtcChannel {
     await this._channels.get(channelId)!.muteLocalVideoStream({ mute: false });
   }
 
-  public async unPublish(params: { channelId: string }): Promise<void> {
+  private async unPublish(params: { channelId: string }): Promise<void> {
     const { channelId } = params;
     if (!this._channels.has(channelId)) {
       throw 'please create first';
@@ -174,7 +183,7 @@ export default class IrisRtcChannel {
     await this._channels.get(channelId)!.muteLocalVideoStream({ mute: true });
   }
 
-  public channelId(params: { channelId: string }): string {
+  private channelId(params: { channelId: string }): string {
     const { channelId } = params;
     if (!this._channels.has(channelId)) {
       throw 'please create first';
@@ -182,7 +191,7 @@ export default class IrisRtcChannel {
     return channelId;
   }
 
-  public async renewToken(params: {
+  private async renewToken(params: {
     channelId: string;
     token: string;
   }): Promise<void> {
@@ -194,7 +203,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.renewToken({ token });
   }
 
-  public async setEncryptionSecret(params: {
+  private async setEncryptionSecret(params: {
     channelId: string;
     secret: string;
   }): Promise<void> {
@@ -206,7 +215,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.setEncryptionSecret({ secret });
   }
 
-  public async setEncryptionMode(params: {
+  private async setEncryptionMode(params: {
     channelId: string;
     encryptionMode:
       | 'aes-128-xts'
@@ -225,7 +234,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.setEncryptionMode({ encryptionMode });
   }
 
-  public async enableEncryption(params: {
+  private async enableEncryption(params: {
     channelId: string;
     enabled: boolean;
     config: EncryptionConfig;
@@ -238,7 +247,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.enableEncryption({ enabled, config });
   }
 
-  public async setClientRole(params: {
+  private async setClientRole(params: {
     channelId: string;
     role: CLIENT_ROLE_TYPE;
     options?: ClientRoleOptions;
@@ -251,7 +260,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.setClientRole({ role, options });
   }
 
-  public async setDefaultMuteAllRemoteAudioStreams(params: {
+  private async setDefaultMuteAllRemoteAudioStreams(params: {
     channelId: string;
     mute: boolean;
   }): Promise<void> {
@@ -265,7 +274,7 @@ export default class IrisRtcChannel {
       ?.setDefaultMuteAllRemoteAudioStreams({ mute });
   }
 
-  public async setDefaultMuteAllRemoteVideoStreams(params: {
+  private async setDefaultMuteAllRemoteVideoStreams(params: {
     channelId: string;
     mute: boolean;
   }): Promise<void> {
@@ -279,7 +288,7 @@ export default class IrisRtcChannel {
       ?.setDefaultMuteAllRemoteVideoStreams({ mute });
   }
 
-  public async muteLocalAudioStream(params: {
+  private async muteLocalAudioStream(params: {
     channelId: string;
     mute: boolean;
   }): Promise<void> {
@@ -291,7 +300,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.muteLocalAudioStream({ mute });
   }
 
-  public async muteLocalVideoStream(params: {
+  private async muteLocalVideoStream(params: {
     channelId: string;
     mute: boolean;
   }): Promise<void> {
@@ -303,7 +312,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.muteLocalVideoStream({ mute });
   }
 
-  public async muteAllRemoteAudioStreams(params: {
+  private async muteAllRemoteAudioStreams(params: {
     channelId: string;
     mute: boolean;
   }): Promise<void> {
@@ -315,7 +324,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.muteAllRemoteAudioStreams({ mute });
   }
 
-  public async adjustUserPlaybackSignalVolume(params: {
+  private async adjustUserPlaybackSignalVolume(params: {
     channelId: string;
     uid: number;
     volume: number;
@@ -330,7 +339,7 @@ export default class IrisRtcChannel {
       ?.adjustUserPlaybackSignalVolume({ uid, volume });
   }
 
-  public async muteRemoteAudioStream(params: {
+  private async muteRemoteAudioStream(params: {
     channelId: string;
     userId: number;
     mute: boolean;
@@ -345,7 +354,7 @@ export default class IrisRtcChannel {
       ?.muteRemoteAudioStream({ userId, mute });
   }
 
-  public async muteAllRemoteVideoStreams(params: {
+  private async muteAllRemoteVideoStreams(params: {
     channelId: string;
     mute: boolean;
   }): Promise<void> {
@@ -357,7 +366,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.muteAllRemoteVideoStreams({ mute });
   }
 
-  public async muteRemoteVideoStream(params: {
+  private async muteRemoteVideoStream(params: {
     channelId: string;
     userId: number;
     mute: boolean;
@@ -372,7 +381,7 @@ export default class IrisRtcChannel {
       ?.muteRemoteVideoStream({ userId, mute });
   }
 
-  public async setRemoteVideoStreamType(params: {
+  private async setRemoteVideoStreamType(params: {
     channelId: string;
     userId: UID;
     streamType: REMOTE_VIDEO_STREAM_TYPE;
@@ -387,7 +396,7 @@ export default class IrisRtcChannel {
       ?.setRemoteVideoStreamType({ userId, streamType });
   }
 
-  public async setRemoteDefaultVideoStreamType(params: {
+  private async setRemoteDefaultVideoStreamType(params: {
     channelId: string;
     streamType: REMOTE_VIDEO_STREAM_TYPE;
   }): Promise<void> {
@@ -401,7 +410,7 @@ export default class IrisRtcChannel {
       ?.setRemoteDefaultVideoStreamType({ streamType });
   }
 
-  public async addPublishStreamUrl(params: {
+  private async addPublishStreamUrl(params: {
     channelId: string;
     url: string;
     transcodingEnabled: boolean;
@@ -416,7 +425,7 @@ export default class IrisRtcChannel {
       ?.addPublishStreamUrl({ url, transcodingEnabled });
   }
 
-  public async removePublishStreamUrl(params: {
+  private async removePublishStreamUrl(params: {
     channelId: string;
     url: string;
   }): Promise<void> {
@@ -428,7 +437,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.removePublishStreamUrl({ url });
   }
 
-  public async setLiveTranscoding(params: {
+  private async setLiveTranscoding(params: {
     channelId: string;
     transcoding: LiveTranscoding;
   }): Promise<void> {
@@ -440,7 +449,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.setLiveTranscoding({ transcoding });
   }
 
-  public async addInjectStreamUrl(params: {
+  private async addInjectStreamUrl(params: {
     channelId: string;
     url: string;
     config: InjectStreamConfig;
@@ -453,7 +462,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.addInjectStreamUrl({ url, config });
   }
 
-  public async removeInjectStreamUrl(params: {
+  private async removeInjectStreamUrl(params: {
     channelId: string;
     url: string;
   }): Promise<void> {
@@ -465,7 +474,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.removeInjectStreamUrl({ url });
   }
 
-  public async startChannelMediaRelay(params: {
+  private async startChannelMediaRelay(params: {
     channelId: string;
     configuration: ChannelMediaRelayConfiguration;
   }): Promise<void> {
@@ -479,7 +488,7 @@ export default class IrisRtcChannel {
       ?.startChannelMediaRelay({ configuration });
   }
 
-  public async updateChannelMediaRelay(params: {
+  private async updateChannelMediaRelay(params: {
     channelId: string;
     configuration: ChannelMediaRelayConfiguration;
   }): Promise<void> {
@@ -493,7 +502,7 @@ export default class IrisRtcChannel {
       ?.updateChannelMediaRelay({ configuration });
   }
 
-  public async stopChannelMediaRelay(params: {
+  private async stopChannelMediaRelay(params: {
     channelId: string;
   }): Promise<void> {
     const { channelId } = params;
@@ -503,7 +512,7 @@ export default class IrisRtcChannel {
     return this._channels.get(channelId)!.stopChannelMediaRelay();
   }
 
-  public async getConnectionState(params: {
+  private async getConnectionState(params: {
     channelId: string;
   }): Promise<CONNECTION_STATE_TYPE> {
     const { channelId } = params;

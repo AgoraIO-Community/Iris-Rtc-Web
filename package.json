@@ -6,7 +6,7 @@
     "build": "webpack --mode=production"
   },
   "dependencies": {
-    "agora-rtc-sdk-ng": "^4.4.0"
+    "agora-rtc-sdk-ng": "^4.7.0"
   },
   "devDependencies": {
     "@react-native-community/eslint-config": "^2.0.0",
