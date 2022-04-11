@@ -19,7 +19,7 @@ module.exports = {
   output: {
     filename: '[name].bundle.js',
     library: 'IrisRtcEngine',
-    libraryTarget: 'umd',
+    libraryTarget: 'var',
     libraryExport: 'default',
     path: path.resolve(__dirname, 'dist'),
   },
