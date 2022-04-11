@@ -34,6 +34,7 @@ import {
   ChannelMediaRelayConfiguration,
   CLIENT_ROLE_TYPE,
   ClientRoleOptions,
+  CLOUD_PROXY_TYPE,
   CONNECTION_STATE_TYPE,
   ENCRYPTION_MODE,
   EncryptionConfig,
@@ -177,6 +178,7 @@ export default class IrisRtcEngine {
     [ApiTypeEngine.kEngineGetConnectionState]: this.getConnectionState,
     [ApiTypeEngine.kEngineSetParameters]: this.setParameters,
     [ApiTypeEngine.kEngineSetAppType]: this.setAppType,
+    [ApiTypeEngine.kEngineSetCloudProxy]: this.setCloudProxy,
   };
 
   constructor() {
@@ -1595,5 +1597,23 @@ export default class IrisRtcEngine {
     return this.setParameters({
       parameters: `{"REPORT_APP_SCENARIO":${params.appType.toString()}}`,
     });
+  }
+
+  private async setCloudProxy(params: {
+    proxyType: CLOUD_PROXY_TYPE;
+  }): Promise<void> {
+    let mode: number = 0;
+    switch (params.proxyType) {
+      case CLOUD_PROXY_TYPE.NONE_PROXY:
+        mode = 0;
+        break;
+      case CLOUD_PROXY_TYPE.UDP_PROXY:
+        mode = 3;
+        break;
+      case CLOUD_PROXY_TYPE.TCP_PROXY:
+        mode = 5;
+        break;
+    }
+    return this._client?.startProxyServer(mode);
   }
 }
