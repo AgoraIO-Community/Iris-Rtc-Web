@@ -807,15 +807,18 @@ export default class IrisRtcEngine {
       ?.join(this._context.appId, channelId, token, userAccount)
       .then(async (id) => {
         try {
-          await this.deviceManager.createMicrophoneAudioTrack(
-            this._enableAudio && this._enableLocalAudio,
-            this._emitEvent.bind(this)
+          await this._publish(
+            await this.deviceManager.createMicrophoneAudioTrack(
+              this._enableAudio && this._enableLocalAudio,
+              this._emitEvent.bind(this)
+            )
           );
-          await this.deviceManager.createCameraVideoTrack(
-            this._enableVideo && this._enableLocalVideo,
-            this._emitEvent.bind(this)
+          await this._publish(
+            await this.deviceManager.createCameraVideoTrack(
+              this._enableVideo && this._enableLocalVideo,
+              this._emitEvent.bind(this)
+            )
           );
-          await this._publish();
         } finally {
           this._emitEvent('JoinChannelSuccess', {
             channel: channelId,
